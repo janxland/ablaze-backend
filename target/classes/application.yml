@@ -1,0 +1,57 @@
+
+mybatis-plus:
+  mapper-locations: classpath*:mapper/**/*.xml
+#  configuration:
+#    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+  global-config:
+    db-config:
+      logic-delete-value: 1
+      logic-not-delete-value: 0
+
+spring:
+  mail:
+    host: smtp.qq.com
+    username: janxland@qq.com
+    password: nxvmszoezvcpbbcc
+    default-encoding: utf-8
+    protocol: smtp
+    port: 465
+    properties:
+      mail:
+        smtp:
+          socketFactory:
+            port: 465
+            class: javax.net.ssl.SSLSocketFactory
+          ssl:
+            enable: true
+
+  datasource:
+    username: test
+    password: janx123666land
+    url: jdbc:mysql://onecloud:3306/Ablaze?useUnicode=true&characterEncoding=utf-8&serverTimezone=Asia/Shanghai
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    type: com.alibaba.druid.pool.DruidDataSource  # 使用 DruidDataSource作为数据源
+    druid:
+      initialSize: 5 #初始化连接大小
+      minIdle: 5     #最小连接池数量
+      maxActive: 20  #最大连接池数量
+      maxWait: 60000 #获取连接时最大等待时间，单位毫秒
+      timeBetweenEvictionRunsMillis: 60000 #配置间隔多久才进行一次检测，检测需要关闭的空闲连接，单位是毫秒
+      minEvictableIdleTimeMillis: 300000   #配置一个连接在池中最小生存的时间，单位是毫秒
+      validationQuery: SELECT 1 from article  #测试连接
+      testWhileIdle: true                  #申请连接的时候检测，建议配置为true，不影响性能，并且保证安全性
+      testOnBorrow: false                  #获取连接时执行检测，建议关闭，影响性能
+      testOnReturn: false                  #归还连接时执行检测，建议关闭，影响性能
+      poolPreparedStatements: false       #是否开启PSCache，PSCache对支持游标的数据库性能提升巨大，oracle建议开启，mysql下建议关闭
+      maxPoolPreparedStatementPerConnectionSize: 20 #开启poolPreparedStatements后生效
+      filters: stat,wall,slf4j   #配置扩展插件，常用的插件有=>stat:监控统计  slf4j:日志  wall:防御sql注入
+      connectionProperties: 'druid.stat.mergeSql=true;druid.stat.slowSqlMillis=5000'
+user:
+  code:
+    format: 【ROGINSHIN】%s为本次验证的验证码，请在5分钟内完成验证。为保证账号安全，请勿泄漏此验证码。
+
+alipay:
+  appId: 9021000131684275
+  appPrivateKey: MIIEvQIBADANBgkqhkiG9w0BAQEFAASCBKcwggSjAgEAAoIBAQC6PM4rZKp28Uz3kpDmMDfM3eFIXqeU15MnmILKRNhJ2yfo6YQCHqml4QVcaqwMh+x7dQtlQpaXKBNAtwRT2IYrBrmVpq26agZZtFFx/QN05LF5iyodDlDMxyecHfISU9rrNcTG59Nk1Ak+a9//T5mMpxa6XW/RC7KfcAuUXS0P5snu4+BIX9FzlVi3uwQb/yRFiTY7W9TENGWl+F9SXRiRcAA9hT36oStsnc0zFdRqr6s4V9HLnpxs3JOPVceStMHJY8V1DgAlyFfo27/ATeC9b5Mm/WaxHcVCbJmoY4QBismIjsOnFPxky3CNJ4UHwtu0Q3Q4omUbcdsHKeEcLkvzAgMBAAECggEAV8FJILdZf5xqOQouDtlPodA3VGONsZv28iRyFJ9mDz8eSiimlF0gcVJbtVVqZqkxrGbVjMxYqzcuA0N53YxchC+yCSs2F23YOjK2YfDnzQ/p9Ky3lmNlfWimaHDP3QT4VfbLFzKrsIodJPWt4d7/KoCdPAnFI4rQi0I/opRZJHE8k7O81trmZmUpp79rBQuTu7WOc1LM/u/7nbiHVgmbk/P5yJ8zNY+X54YYlPl+AaJTuUlx85l6hDlAnyi+ObJ8UikTes/1Kl+kE6CIP9+LjDNL2TJ+9Os27GQJXz5UTFdW71hoqNXRRwofmKUiIeI08JC75UcS5R5oxIcvqLXo0QKBgQDb6xr0gSaHY7tGJaYeXPF4TGl/Eu0cXBrzRRb2KkKfqLIbXgw3s7zuaICdLdLt0xmWX4/wDuBGOrsTIjIG/I2u2M9XiepC8IO7CdAx6544qx6y6++zClZt1BC6n3wb8QJ1HDtZ8Jr5R8tS/NZ9fxAEbGe3ebJSlDAgFsfEA2rHCQKBgQDYyw32hnlAgFDqe0JLd7jmtoEDNdoL/ujBdUfdcUdZQPMqwpDoubdnHHP/lyeJNruU+F9FDLzCusAHy/kSoL3ANaoYBQZ52ZmdEWjQ95z3tvATEYbQ1BTcj8i2DBkXcrqwRPiMJZ+bGevsoWVbqvuWDskBsVe2C3YbTzhOY6ZeGwKBgA41MDafqWeRz+WGRSctBgSpmx80j9EHOk6BJiydKlS6R1dxSgTHPeuBIN4GudvXiY2netsdeuvOm4tu6CB/bH/hTfPv2wycEUaiKasv97bdh0wz5faBMnhB/RqxdwkvFuOOAV+cJcb5Fm+0Gf9dmCFRB5pY6GZhYIKSNjG5rspRAoGBALK5rBg6QooPfyXgWgY3fEMP4IpSAiHzk9Wxp36DHgwSBKaS4r5KJU4nYeYrqhdv/PNSU9BsMM3lAd0rpnpZ9DUayNCmi/E2mHKp4JyuFkUOFxvRTjCpN02iaBjVHnZ7Sjd5lOKNPeizVRGu+Q26h1DtfX8cwi+9gTAAfm35rzVTAoGAHVTOQ57rQY+j4iFLRRlqNCCvwAu05cXugsadr2w7AH8Rd2l5teMNY1kqnJyQPrx9+7/uAqnbL5kopZACDL+fsu86rzGa+yHUiaEVOwiByDhfloYmMQPfSF7sZljfR8+2Go3T0amSEyShoRTvDpvwQwfHeRlccBIHvO1KvIQS/1k=
+  alipayPublicKey: MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAujzOK2SqdvFM95KQ5jA3zN3hSF6nlNeTJ5iCykTYSdsn6OmEAh6ppeEFXGqsDIfse3ULZUKWlygTQLcEU9iGKwa5laatumoGWbRRcf0DdOSxeYsqHQ5QzMcnnB3yElPa6zXExufTZNQJPmvf/0+ZjKcWul1v0Quyn3ALlF0tD+bJ7uPgSF/Rc5VYt7sEG/8kRYk2O1vUxDRlpfhfUl0YkXAAPYU9+qErbJ3NMxXUaq+rOFfRy56cbNyTj1XHkrTByWPFdQ4AJchX6Nu/wE3gvW+TJv1msR3FQmyZqGOEAYrJiI7DpxT8ZMtwjSeFB8LbtEN0OKJlG3HbBynhHC5L8wIDAQAB
+  notifyUrl: https://www.roginx.ink/alipay/notify
