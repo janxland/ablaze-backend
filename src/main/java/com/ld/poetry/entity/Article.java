@@ -1,9 +1,10 @@
 package com.ld.poetry.entity;
 
-import com.baomidou.mybatisplus.annotation.TableName;
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableId;
 import java.time.LocalDateTime;
+import com.baomidou.mybatisplus.annotation.TableName; // MyBatis-Plus
+
 import com.baomidou.mybatisplus.annotation.TableLogic;
 import com.baomidou.mybatisplus.annotation.TableField;
 import java.io.Serializable;
@@ -20,7 +21,7 @@ import lombok.EqualsAndHashCode;
  */
 @Data
 @EqualsAndHashCode(callSuper = false)
-@TableName("article")
+@TableName(value = "article", autoResultMap = true)
 public class Article implements Serializable {
 
     private static final long serialVersionUID = 1L;
@@ -79,6 +80,12 @@ public class Article implements Serializable {
     private String articleContent;
 
     /**
+     * 隐藏内容
+     */
+    @TableField("article_hidden")
+    private String articleHidden;
+
+    /**
      * 浏览量
      */
     @TableField("view_count")
@@ -123,7 +130,7 @@ public class Article implements Serializable {
      */
     @TableField("recommend_status")
     private Boolean recommendStatus;
-
+    
     /**
      * 是否启用评论[0:否，1:是]
      */

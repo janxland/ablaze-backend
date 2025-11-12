@@ -11,7 +11,9 @@ import com.ld.poetry.entity.Article;
 import com.ld.poetry.entity.Label;
 import com.ld.poetry.entity.Sort;
 import com.ld.poetry.entity.User;
+import com.ld.poetry.entity.UserArticleAuth;
 import com.ld.poetry.service.ArticleService;
+import com.ld.poetry.service.UserArticleAuthService;
 import com.ld.poetry.utils.*;
 import com.ld.poetry.vo.ArticleVO;
 import com.ld.poetry.vo.BaseRequestVO;
@@ -23,7 +25,10 @@ import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
 
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+
 
 /**
  * <p>
@@ -35,6 +40,9 @@ import java.util.stream.Collectors;
  */
 @Service
 public class ArticleServiceImpl extends ServiceImpl<ArticleMapper, Article> implements ArticleService {
+    @Autowired
+    private UserArticleAuthService userArticleAuthService;
+    
     @Autowired
     private DiaryMapper diaryMapper;
     
@@ -165,27 +173,195 @@ public class ArticleServiceImpl extends ServiceImpl<ArticleMapper, Article> impl
         }
         return PoetryResult.success(baseRequestVO);
     }
+    private static final Pattern HIDE_CONTENT_PATTERN = Pattern.compile(
+        "(\\[hidecontent\\s+type=[\"']?(\\w+)[\"']?[^\\]]*\\])(.*?)(\\[/hidecontent\\])",
+        Pattern.DOTALL
+    );
+    /**
+     * 如果未登录或文章ID为空时，统一将所有 [hidecontent type="xxx"]...[/hidecontent]
+     * 的内容清空，但保留开、闭标签。
+     * 可选：给标签加 isshow="false" 标记
+     */
+    private String removeAllHiddenContent(String content) {
+        Matcher matcher = HIDE_CONTENT_PATTERN.matcher(content);
+        StringBuffer result = new StringBuffer();
 
-    @Override
+        while (matcher.find()) {
+            // group(1) = 原始开标签
+            // group(2) = 标签中的 type 值 (可以不用)
+            // group(3) = 中间内容
+            // group(4) = 闭标签
+
+            String openTag       = matcher.group(1); // [hidecontent type="xxx" ...]
+            String typeValue     = matcher.group(2); // 比如 "vip1"
+            String hiddenContent = matcher.group(3); // 中间要清空的部分
+            String closeTag      = matcher.group(4); // [/hidecontent]
+
+            // 这里要把中间内容移除，所以 finalContent = ""
+            String finalContent  = "";
+            String openTagWithAttr;
+            if (openTag.endsWith("]")) {
+                openTagWithAttr = openTag.substring(0, openTag.length() - 1)
+                        + " isshow=\"false\"]";
+            } else {
+                openTagWithAttr = openTag + " isshow=\"false\"]";
+            }
+            String replacement = openTagWithAttr + finalContent + closeTag;
+            matcher.appendReplacement(result, Matcher.quoteReplacement(replacement));
+        }
+
+        // 将剩余未匹配的部分拼接上
+        matcher.appendTail(result);
+
+        return result.toString();
+    }
+    private String processHiddenContent(String content, Integer userId, Integer articleId) {
+        // 如果用户/文章信息为空，则直接清理所有隐藏内容（但保留标签）
+        if (userId == null || articleId == null) {
+            return removeAllHiddenContent(content);
+        }
+    
+        // 示例：查询当前用户是否拥有各项权限
+        UserArticleAuth auth = userArticleAuthService.findByUserAndArticle(userId, articleId);
+        int vip1  = (auth != null && auth.getVip1()  != null) ? auth.getVip1()  : 0;
+        int pay   = (auth != null && auth.getPay()   != null) ? auth.getPay()   : 0;
+        int reply = (auth != null && auth.getReply() != null) ? auth.getReply() : 0;
+    
+        Matcher matcher = HIDE_CONTENT_PATTERN.matcher(content);
+        StringBuffer result = new StringBuffer();
+    
+        while (matcher.find()) {
+            // group(1) = 原始开标签, 例如 [hidecontent type="vip1" xxx...]
+            // group(2) = 具体的 type 值 (因为上面的正则里捕获了 (\\w+) )
+            // group(3) = 中间隐藏内容
+            // group(4) = 闭标签 [/hidecontent]
+            String openTag = matcher.group(1);
+            String type    = matcher.group(2).toLowerCase();
+            String hiddenContent = matcher.group(3);
+            String closeTag = matcher.group(4);
+    
+            // 判断权限
+            boolean hasPermission;
+            switch (type) {
+                case "logged":
+                    hasPermission = (userId != null);
+                    break;
+                case "reply":
+                    hasPermission = (reply == 1);
+                    break;
+                case "vip1":
+                    hasPermission = (vip1 == 1);
+                    break;
+                case "pay":
+                    hasPermission = (pay == 1);
+                    break;
+                default:
+                    // 对于未知类型，直接当没权限处理
+                    hasPermission = false;
+            }
+    
+            // 根据权限决定 isshow 的值，以及是否保留隐藏内容
+            String isShowValue = hasPermission ? "true" : "false";
+            String finalContent = hasPermission ? hiddenContent : "";
+    
+            // 在开标签里额外加一个属性 isshow="true|false"
+            // 这里演示简单追加（如果项目中已有别的属性需要更精细处理）
+            // 以免出现形如 `[hidecontent type="vip1" issome="1"isshow="true"]` 的情况
+            // 可以在插入前先判断 openTag 是否带空格，必要时再加一个空格
+            // 下面是一个简易写法：
+            String openTagWithAttr;
+            if (openTag.endsWith("]")) {
+                // 去掉最后一个 `]`
+                openTagWithAttr = openTag.substring(0, openTag.length() - 1)
+                        + " isshow=\"" + isShowValue + "\"]";
+            } else {
+                // 理论上不会出现这种情况，除非开标签不规范
+                openTagWithAttr = openTag + " isshow=\"" + isShowValue + "\"]";
+            }
+    
+            // 重新组装：开标签(加了 isshow) + (保留或去掉内容) + 闭标签
+            String replacement = openTagWithAttr + finalContent + closeTag;
+    
+            // 把 replacement 填入结果中
+            matcher.appendReplacement(result, Matcher.quoteReplacement(replacement));
+        }
+        // 处理剩余没有匹配到的字符串
+        matcher.appendTail(result);
+    
+        return result.toString();
+    }
+    
+
+    /**
+     * 获取文章详情
+     * @param id 文章ID
+     * @param flag 是否某种标志(示例保留)
+     * @param password 用户输入的密码(如果文章加密)
+     */
     public PoetryResult<ArticleVO> getArticleById(Integer id, Boolean flag, String password) {
+        // 1) 查找数据库中的 Article
         LambdaQueryChainWrapper<Article> lambdaQuery = lambdaQuery();
         lambdaQuery.eq(Article::getId, id);
 
         Article article = lambdaQuery.one();
+        if (article == null) {
+            return PoetryResult.fail("文章不存在");
+        }
         if (!article.getViewStatus()) {
             return PoetryResult.fail("该文章已关闭");
         }
-        if (article.getPassword()!= null && article.getPassword()!="" ){
-            if (article.getViewStatus() && (!StringUtils.hasText(password) || !password.equals(article.getPassword()))) {
+
+        // 2) 判断当前用户是否为管理员
+        //    （需要你在 PoetryUtil.getCurrentUser() 返回的对象里有 userType 字段）
+        Integer currentUserId = PoetryUtil.getUserId();
+        boolean isAdmin = false;
+        if (currentUserId != null && PoetryUtil.getCurrentUser() != null) {
+            Integer userType = PoetryUtil.getCurrentUser().getUserType();
+            if (userType != null && userType.equals(PoetryEnum.USER_TYPE_ADMIN.getCode())) {
+                isAdmin = true;
+            }
+        }
+
+        // 3) 如果文章有密码保护，且不是管理员时，需要校验密码
+        //    管理员可绕过密码校验
+        if (!isAdmin && StringUtils.hasText(article.getPassword())) {
+            if (!StringUtils.hasText(password) || !password.equals(article.getPassword())) {
                 return PoetryResult.fail("密码错误" + (StringUtils.hasText(article.getTips()) ? article.getTips() : "请联系作者获取密码"));
             }
         }
- 
-        article.setPassword(null);
+
+        // 4) 处理隐藏内容
+        String processedContent;
+        if (isAdmin) {
+            // 管理员：直接查看全部内容，无需隐藏
+            processedContent = article.getArticleContent();
+        } else {
+            // 非管理员
+            if (currentUserId == null) {
+                // 未登录时，移除所有隐藏内容，也可改为统一提示
+                processedContent = removeAllHiddenContent(article.getArticleContent());
+            } else {
+                // 已登录时，根据 user_article_auth 表判断权限
+                processedContent = processHiddenContent(article.getArticleContent(), currentUserId, article.getId());
+            }
+        }
+
+        // 5) 更新浏览次数(若访问者不是作者本人)
         articleMapper.updateViewCount(id);
+
+        // 6) 管理员不需要隐藏密码，普通用户将密码清空
+        if (!isAdmin) {
+            article.setPassword(null);
+        }
+        // 将处理后的内容设置回 article
+        article.setArticleContent(processedContent);
+
+        // 7) 构建 VO 返回
         ArticleVO articleVO = buildArticleVO(article, false);
         return PoetryResult.success(articleVO);
     }
+
+
 
     @Override
     public PoetryResult<Page> listAdminArticle(BaseRequestVO baseRequestVO, Boolean isBoss) {

@@ -10,7 +10,9 @@ import com.ld.poetry.dao.CommentMapper;
 import com.ld.poetry.entity.Article;
 import com.ld.poetry.entity.Comment;
 import com.ld.poetry.entity.User;
+import com.ld.poetry.entity.UserArticleAuth;
 import com.ld.poetry.service.CommentService;
+import com.ld.poetry.service.UserArticleAuthService;
 import com.ld.poetry.utils.*;
 import com.ld.poetry.vo.BaseRequestVO;
 import com.ld.poetry.vo.CommentVO;
@@ -35,6 +37,9 @@ import java.util.stream.Collectors;
  */
 @Service
 public class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment> implements CommentService {
+
+    @Autowired
+    private UserArticleAuthService userArticleAuthService;
 
     @Autowired
     private ArticleMapper articleMapper;
@@ -74,6 +79,16 @@ public class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment> impl
             mailSendUtil.sendCommentMail(commentVO, one, this);
         } catch (Exception e) {
             log.error("发送评论邮件失败：", e);
+        }
+
+        try {
+            UserArticleAuth auth = new UserArticleAuth();
+            auth.setUserId(comment.getUserId());
+            auth.setArticleId(comment.getSource());
+            auth.setReply(1);
+            userArticleAuthService.createOrUpdate(auth);
+        } catch (Exception e) {
+            System.out.println(e);
         }
 
         return PoetryResult.success();

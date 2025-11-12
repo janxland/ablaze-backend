@@ -23,6 +23,27 @@
             "name": "Launch Current File",
             "request": "launch",
             "mainClass": "${file}"
+        },
+        {
+            "type": "java",
+            "name": "Spring Boot-PoetryApplication<ablaze>",
+            "request": "launch",
+            "cwd": "${workspaceFolder}",
+            "mainClass": "com.ld.poetry.PoetryApplication",
+            "projectName": "ablaze",
+            "args": "",
+            "envFile": "${workspaceFolder}/.env",
+            "vmArgs": " -Dcom.sun.management.jmxremote -Dcom.sun.management.jmxremote.port=12961 -Dcom.sun.management.jmxremote.authenticate=false -Dcom.sun.management.jmxremote.ssl=false -Dspring.jmx.enabled=true -Djava.rmi.server.hostname=localhost -Dspring.application.admin.enabled=true -Dspring.boot.project.name=ablaze"
+        },
+        {
+            "type": "java",
+            "name": "Spring Boot-CodeGenerator<ablaze>",
+            "request": "launch",
+            "cwd": "${workspaceFolder}",
+            "mainClass": "com.ld.poetry.utils.CodeGenerator",
+            "projectName": "ablaze",
+            "args": "",
+            "envFile": "${workspaceFolder}/.env"
         }
     ]
 }

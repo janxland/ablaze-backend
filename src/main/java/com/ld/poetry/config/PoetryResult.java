@@ -4,10 +4,7 @@ import lombok.Data;
 
 import java.io.Serializable;
 
-import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.ld.poetry.entity.Todolist;
 import com.ld.poetry.utils.CodeMsg;
-import com.ld.poetry.vo.ArticleVO;
 
 @Data
 public class PoetryResult<T> implements Serializable {

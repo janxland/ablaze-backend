@@ -28,7 +28,12 @@ public class PoetryUtil {
     }
 
     public static String getToken() {
-        return PoetryUtil.getRequest().getHeader(CommonConst.TOKEN_HEADER);
+        String token = PoetryUtil.getRequest().getHeader(CommonConst.TOKEN_HEADER);
+        // 支持Bearer前缀的Token (符合W3C标准)
+        if (StringUtils.hasText(token) && token.startsWith("Bearer ")) {
+            token = token.substring(7);
+        }
+        return token;
     }
 
     public static User getCurrentUser() {
@@ -42,6 +47,9 @@ public class PoetryUtil {
     }
 
     public static Integer getUserId() {
+        if(PoetryUtil.getToken()==null){
+            return null;
+        }
         User user = (User) PoetryCache.get(PoetryUtil.getToken());
         return user == null ? null : user.getId();
     }

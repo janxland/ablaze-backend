@@ -59,6 +59,11 @@ public class ImWsMsgHandler implements IWsMsgHandler {
             return null;
         }
 
+        // 支持Bearer前缀的Token (符合W3C标准)
+        if (token.startsWith("Bearer ")) {
+            token = token.substring(7);
+        }
+
         User user = (User) PoetryCache.get(token);
 
         if (user == null) {
@@ -76,6 +81,12 @@ public class ImWsMsgHandler implements IWsMsgHandler {
     @Override
     public void onAfterHandshaked(HttpRequest httpRequest, HttpResponse httpResponse, ChannelContext channelContext) {
         String token = httpRequest.getParam(CommonConst.TOKEN_HEADER);
+        
+        // 支持Bearer前缀的Token (符合W3C标准)
+        if (StringUtils.hasText(token) && token.startsWith("Bearer ")) {
+            token = token.substring(7);
+        }
+        
         User user = (User) PoetryCache.get(token);
         Tio.closeUser(channelContext.tioConfig, user.getId().toString(), null);
         Tio.bindUser(channelContext, user.getId().toString());

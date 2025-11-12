@@ -13,32 +13,32 @@
 
     <!-- info日志单文件大小限制 -->
     <springProperty scope="context" name="logback.fileInfoLog.maxFileSize" source="logback.fileInfoLog.maxFileSize"
-                    defaultValue="100MB"/>
+        defaultValue="100MB"/>
     <!-- info日志最大保留时长单位天 -->
     <springProperty scope="context" name="logback.fileInfoLog.maxHistory" source="logback.fileInfoLog.maxHistory"
-                    defaultValue="15"/>
+        defaultValue="15"/>
     <!-- info日志文件总大小，超过该大小，旧得即将删除 -->
     <springProperty scope="context" name="logback.fileInfoLog.totalSizeCap" source="logback.fileInfoLog.totalSizeCap"
-                    defaultValue="5GB"/>
+        defaultValue="5GB"/>
 
 
     <!-- error日志单文件大小限制 -->
     <springProperty scope="context" name="logback.fileErrorLog.maxFileSize" source="logback.fileErrorLog.maxFileSize"
-                    defaultValue="100MB"/>
+        defaultValue="100MB"/>
     <!-- error日志最大保留时长单位天 -->
     <springProperty scope="context" name="logback.fileErrorLog.maxHistory" source="logback.fileErrorLog.maxHistory"
-                    defaultValue="15"/>
+        defaultValue="15"/>
     <!-- error日志文件总大小，超过该大小，旧得即将删除 -->
     <springProperty scope="context" name="logback.fileErrorLog.totalSizeCap" source="logback.fileErrorLog.totalSizeCap"
-                    defaultValue="5GB"/>
+        defaultValue="5GB"/>
 
 
     <!-- 控制台输出得日志格式 -->
     <property name="CONSOLE_LOG_PATTERN"
-              value="%clr(%d{yyyy-MM-dd HH:mm:ss.SSS}){faint} %clr(${LOG_LEVEL_PATTERN:-%5p}) %clr(${PID:- }){magenta} %clr(---){faint} %clr([%15.15t]){faint} %clr(%-40.40logger{39}){cyan} %clr(:){faint} %m%n${LOG_EXCEPTION_CONVERSION_WORD:-%wEx}"/>
+        value="%clr(%d{yyyy-MM-dd HH:mm:ss.SSS}){faint} %clr(${LOG_LEVEL_PATTERN:-%5p}) %clr(${PID:- }){magenta} %clr(---){faint} %clr([%15.15t]){faint} %clr(%-40.40logger{39}){cyan} %clr(:){faint} %m%n${LOG_EXCEPTION_CONVERSION_WORD:-%wEx}"/>
     <!-- 日志文件输出得日志格式 -->
     <property name="FILE_LOG_PATTERN"
-              value="%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{50} - %msg%n"/>
+        value="%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{50} - %msg%n"/>
 
 
     <!-- 控制台输出 -->
