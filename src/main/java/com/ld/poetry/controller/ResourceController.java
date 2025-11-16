@@ -2,7 +2,8 @@ package com.ld.poetry.controller;
 
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.ld.poetry.config.LoginCheck;
+import com.ld.poetry.annotation.RequirePermission;
+import com.ld.poetry.enums.PermissionCode;
 import com.ld.poetry.config.PoetryResult;
 import com.ld.poetry.entity.Resource;
 import com.ld.poetry.service.ResourceService;
@@ -39,7 +40,7 @@ public class ResourceController {
      * 保存
      */
     @PostMapping("/saveResource")
-    @LoginCheck
+    @RequirePermission(PermissionCode.LOGIN_REQUIRED)
     public PoetryResult saveResource(@RequestBody Resource resource) {
         if (!StringUtils.hasText(resource.getType()) || !StringUtils.hasText(resource.getPath())) {
             return PoetryResult.fail("资源类型和资源路径不能为空！");
@@ -56,7 +57,7 @@ public class ResourceController {
      * 删除
      */
     @PostMapping("/deleteResource")
-    @LoginCheck(0)
+    @RequirePermission(PermissionCode.SUPER_ADMIN)
     public PoetryResult deleteResource(@RequestParam("path") String path) {
         QiniuUtil.deleteFile(Collections.singletonList(path.replace("http://qiniu.roginx.ink/", "")));
         resourceService.lambdaUpdate().eq(Resource::getPath, path).remove();
@@ -67,7 +68,7 @@ public class ResourceController {
      * 查询表情包
      */
     @GetMapping("/getImageList")
-    @LoginCheck
+    @RequirePermission(PermissionCode.LOGIN_REQUIRED)
     public PoetryResult<List<String>> getImageList() {
         List<Resource> list = resourceService.lambdaQuery().select(Resource::getPath)
                 .eq(Resource::getType, CommonConst.PATH_TYPE_INTERNET_MEME)
@@ -83,7 +84,7 @@ public class ResourceController {
      * 查询资源
      */
     @PostMapping("/listResource")
-    @LoginCheck(0)
+    @RequirePermission(PermissionCode.SUPER_ADMIN)
     public PoetryResult<Page> listResource(@RequestBody BaseRequestVO baseRequestVO) {
         resourceService.lambdaQuery()
                 .eq(StringUtils.hasText(baseRequestVO.getResourceType()), Resource::getType, baseRequestVO.getResourceType())
@@ -95,7 +96,7 @@ public class ResourceController {
      * 修改资源状态
      */
     @GetMapping("/changeResourceStatus")
-    @LoginCheck(0)
+    @RequirePermission(PermissionCode.SUPER_ADMIN)
     public PoetryResult changeResourceStatus(@RequestParam("id") Integer id, @RequestParam("flag") Boolean flag) {
         resourceService.lambdaUpdate().eq(Resource::getId, id).set(Resource::getStatus, flag).update();
         return PoetryResult.success();

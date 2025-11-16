@@ -3,7 +3,8 @@ package com.ld.poetry.im.http.controller;
 
 import com.baomidou.mybatisplus.extension.conditions.query.LambdaQueryChainWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.ld.poetry.config.LoginCheck;
+import com.ld.poetry.annotation.RequirePermission;
+import com.ld.poetry.enums.PermissionCode;
 import com.ld.poetry.config.PoetryResult;
 import com.ld.poetry.entity.User;
 import com.ld.poetry.im.http.entity.ImChatGroup;
@@ -56,7 +57,7 @@ public class ImChatUserGroupMessageController {
      * 获取群消息（只获取前四十条）
      */
     @GetMapping("/listGroupMessage")
-    @LoginCheck
+    @RequirePermission(PermissionCode.LOGIN_REQUIRED)
     public PoetryResult<Page> listGroupMessage(@RequestParam(value = "current", defaultValue = "1") Long current,
                                                @RequestParam(value = "size", defaultValue = "40") Long size,
                                                @RequestParam(value = "groupId") Integer groupId) {

@@ -5,7 +5,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
-import com.ld.poetry.config.LoginCheck;
+import com.ld.poetry.annotation.RequirePermission;
+import com.ld.poetry.enums.PermissionCode;
 import com.ld.poetry.config.PoetryResult;
 import com.ld.poetry.service.UserService;
 import com.ld.poetry.utils.CommonConst;
@@ -64,7 +65,7 @@ public class UserController {
      * 退出
      */
     @GetMapping("/logout")
-    @LoginCheck
+    @RequirePermission(PermissionCode.LOGIN_REQUIRED)
     public PoetryResult exit() {
         return userService.exit();
     }
@@ -74,7 +75,7 @@ public class UserController {
      * 更新用户信息
      */
     @PostMapping("/updateUserInfo")
-    @LoginCheck
+    @RequirePermission(PermissionCode.LOGIN_REQUIRED)
     public PoetryResult<UserVO> updateUserInfo(@RequestBody UserVO user) {
         PoetryCache.remove(CommonConst.USER_CACHE + PoetryUtil.getUserId().toString());
         return userService.updateUserInfo(user);
@@ -87,7 +88,7 @@ public class UserController {
      * 2 邮箱
      */
     @GetMapping("/getCode")
-    @LoginCheck
+    @RequirePermission(PermissionCode.LOGIN_REQUIRED)
     public PoetryResult getCode(@RequestParam("flag") Integer flag) {
         return userService.getCode(flag);
     }
@@ -99,7 +100,7 @@ public class UserController {
      * 2 邮箱
      */
     @GetMapping("/getCodeForBind")
-    @LoginCheck
+    @RequirePermission(PermissionCode.LOGIN_REQUIRED)
     public PoetryResult getCodeForBind(@RequestParam("place") String place, @RequestParam("flag") Integer flag) {
         return userService.getCodeForBind(place, flag);
     }
@@ -112,7 +113,7 @@ public class UserController {
      * 3 密码：place=老密码&password=新密码
      */
     @PostMapping("/updateSecretInfo")
-    @LoginCheck
+    @RequirePermission(PermissionCode.LOGIN_REQUIRED)
     public PoetryResult<UserVO> updateSecretInfo(@RequestParam("place") String place, @RequestParam("flag") Integer flag, @RequestParam(value = "code", required = false) String code, @RequestParam("password") String password) {
         PoetryCache.remove(CommonConst.USER_CACHE + PoetryUtil.getUserId().toString());
         return userService.updateSecretInfo(place, flag, code, password);
@@ -144,7 +145,7 @@ public class UserController {
      * 根据用户名查找用户信息
      */
     @GetMapping("/getUserByUsername")
-    @LoginCheck
+    @RequirePermission(PermissionCode.LOGIN_REQUIRED)
     public PoetryResult<List<UserVO>> getUserByUsername(@RequestParam("username") String username) {
         return userService.getUserByUsername(username);
     }

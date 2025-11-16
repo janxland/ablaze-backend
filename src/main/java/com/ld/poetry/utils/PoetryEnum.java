@@ -31,9 +31,11 @@ public enum PoetryEnum {
     /**
      * 用户类型
      */
+    USER_TYPE_SUPER_ADMIN(-1, "超级管理员"),
     USER_TYPE_ADMIN(0, "站长"),
     USER_TYPE_DEV(1, "管理员"),
-    USER_TYPE_USER(2, "用户");
+    USER_TYPE_USER(2, "用户"),
+    USER_TYPE_NORMAL(2, "普通用户");
 
 
     private int code;

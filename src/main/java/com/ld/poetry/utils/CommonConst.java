@@ -3,25 +3,39 @@ package com.ld.poetry.utils;
 public class CommonConst {
 
     /**
-     * 根据用户ID获取Token
+     * JWT Token相关常量
      */
-    public static final String USER_TOKEN = "user_token_";
-
-    public static final String ADMIN_TOKEN = "admin_token_";
-
-    /**
-     * Token
-     */
-    public static final String USER_ACCESS_TOKEN = "user_access_token_";
-
-    public static final String ADMIN_ACCESS_TOKEN = "admin_access_token_";
-
     public static final String TOKEN_HEADER = "Authorization";
-
+    
     /**
-     * Token过期时间：6小时
+     * JWT Token前缀
      */
-    public static final long TOKEN_EXPIRE = 216000;
+    public static final String TOKEN_PREFIX = "Bearer ";
+    
+    /**
+     * JWT Token过期时间：24小时（秒）
+     */
+    public static final long JWT_TOKEN_EXPIRE = 86400;
+    
+    /**
+     * 缓存过期时间：6小时（秒）- 保持向后兼容
+     */
+    public static final long TOKEN_EXPIRE = 21600;
+    
+    /**
+     * 用户类型标识
+     */
+    public static final String USER_TYPE_NORMAL = "NORMAL";
+    public static final String USER_TYPE_ADMIN = "ADMIN";
+    public static final String USER_TYPE_SUPER_ADMIN = "SUPER_ADMIN";
+    
+    /**
+     * 旧版Token常量 - 保持向后兼容（已弃用，建议使用JWT）
+     */
+    @Deprecated
+    public static final String USER_TOKEN = "user_token_";
+    @Deprecated
+    public static final String ADMIN_TOKEN = "admin_token_";
 
     /**
      * Boss信息

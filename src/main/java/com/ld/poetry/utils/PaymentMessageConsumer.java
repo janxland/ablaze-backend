@@ -16,7 +16,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.dao.DataAccessException;
 
 import com.ld.poetry.entity.UserArticleAuth;
-import com.ld.poetry.service.UserArticleAuthService; // 添加此行
+import com.ld.poetry.service.UserArticleAuthService;
 
 @Component
 @RequiredArgsConstructor

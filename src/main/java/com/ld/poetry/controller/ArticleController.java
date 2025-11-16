@@ -2,7 +2,8 @@ package com.ld.poetry.controller;
 
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.ld.poetry.config.LoginCheck;
+import com.ld.poetry.annotation.RequirePermission;
+import com.ld.poetry.enums.PermissionCode;
 import com.ld.poetry.config.PoetryResult;
 import com.ld.poetry.service.ArticleService;
 import com.ld.poetry.utils.CommonConst;
@@ -35,7 +36,7 @@ public class ArticleController {
     /**
      * 保存文章
      */
-    @LoginCheck(1)
+    @RequirePermission(PermissionCode.USER_ADMIN)
     @PostMapping("/saveArticle")
     public PoetryResult saveArticle(@Validated @RequestBody ArticleVO articleVO) {
         PoetryCache.remove(CommonConst.USER_ARTICLE_LIST + PoetryUtil.getUserId().toString());
@@ -47,7 +48,7 @@ public class ArticleController {
      * 删除文章
      */
     @GetMapping("/deleteArticle")
-    @LoginCheck(1)
+    @RequirePermission(PermissionCode.USER_ADMIN)
     public PoetryResult deleteArticle(@RequestParam("id") Integer id) {
         PoetryCache.remove(CommonConst.USER_ARTICLE_LIST + PoetryUtil.getUserId().toString());
         return articleService.deleteArticle(id);
@@ -58,7 +59,7 @@ public class ArticleController {
      * 更新文章
      */
     @PostMapping("/updateArticle")
-    @LoginCheck(1)
+    @RequirePermission(PermissionCode.USER_ADMIN)
     public PoetryResult updateArticle(@Validated @RequestBody ArticleVO articleVO) {
         return articleService.updateArticle(articleVO);
     }
@@ -68,6 +69,7 @@ public class ArticleController {
      * 查询文章List
      */
     @PostMapping("/listArticle")
+    @RequirePermission(PermissionCode.PUBLIC)
     public PoetryResult<Page> listArticle(@RequestBody BaseRequestVO baseRequestVO) {
         return articleService.listArticle(baseRequestVO);
     }
@@ -78,6 +80,7 @@ public class ArticleController {
      * flag = true：查询可见的文章
      */
     @GetMapping("/getArticleById")
+    @RequirePermission(PermissionCode.PUBLIC)
     public PoetryResult<ArticleVO> getArticleById(@RequestParam("id") Integer id, @RequestParam("flag") Boolean flag, @RequestParam(value = "password", required = false) String password) {
         return articleService.getArticleById(id, flag, password);
     }

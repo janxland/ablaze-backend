@@ -37,20 +37,42 @@ public class PoetryApplicationRunner implements ApplicationRunner {
 
     @Override
     public void run(ApplicationArguments args) throws Exception {
-        LambdaQueryChainWrapper<WebInfo> wrapper = new LambdaQueryChainWrapper<>(webInfoMapper);
-        List<WebInfo> list = wrapper.list();
-        if (!CollectionUtils.isEmpty(list)) {
-            PoetryCache.put(CommonConst.WEB_INFO, list.get(0));
-        }
+        // 异步初始化缓存，不阻塞启动
+        new Thread(() -> {
+            try {
+                // 初始化网站信息缓存
+                LambdaQueryChainWrapper<WebInfo> wrapper = new LambdaQueryChainWrapper<>(webInfoMapper);
+                List<WebInfo> list = wrapper.list();
+                if (!CollectionUtils.isEmpty(list)) {
+                    PoetryCache.put(CommonConst.WEB_INFO, list.get(0));
+                }
 
-        List<Sort> sortInfo = commonQuery.getSortInfo();
-        if (!CollectionUtils.isEmpty(sortInfo)) {
-            PoetryCache.put(CommonConst.SORT_INFO, sortInfo);
-        }
+                // 初始化分类信息缓存
+                List<Sort> sortInfo = commonQuery.getSortInfo();
+                if (!CollectionUtils.isEmpty(sortInfo)) {
+                    PoetryCache.put(CommonConst.SORT_INFO, sortInfo);
+                }
 
-        User admin = userService.lambdaQuery().eq(User::getUserType, PoetryEnum.USER_TYPE_ADMIN.getCode()).one();
-        PoetryCache.put(CommonConst.ADMIN, admin);
+                // 初始化管理员信息缓存
+                User admin = userService.lambdaQuery().eq(User::getUserType, PoetryEnum.USER_TYPE_ADMIN.getCode()).one();
+                PoetryCache.put(CommonConst.ADMIN, admin);
+                
+                System.out.println("缓存初始化完成");
+            } catch (Exception e) {
+                System.err.println("缓存初始化失败: " + e.getMessage());
+            }
+        }).start();
 
-        tioWebsocketStarter.start();
+        // WebSocket启动也异步化
+        new Thread(() -> {
+            try {
+                tioWebsocketStarter.start();
+                System.out.println("WebSocket启动完成");
+            } catch (Exception e) {
+                System.err.println("WebSocket启动失败: " + e.getMessage());
+            }
+        }).start();
+        
+        System.out.println("应用启动完成，后台初始化中...");
     }
 }

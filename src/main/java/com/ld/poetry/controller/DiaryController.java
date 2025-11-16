@@ -2,7 +2,8 @@ package com.ld.poetry.controller;
 
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.ld.poetry.config.LoginCheck;
+import com.ld.poetry.annotation.RequirePermission;
+import com.ld.poetry.enums.PermissionCode;
 import com.ld.poetry.config.PoetryResult;
 import com.ld.poetry.entity.Diary;
 import com.ld.poetry.service.DiaryService;
@@ -36,7 +37,7 @@ public class DiaryController {
     /**
      * 保存文章
      */
-    @LoginCheck(1)
+    @RequirePermission(PermissionCode.USER_ADMIN)
     @PostMapping("/saveArticle")
     public PoetryResult saveArticle(@Validated @RequestBody ArticleVO articleVO) {
         PoetryCache.remove(CommonConst.USER_ARTICLE_LIST + PoetryUtil.getUserId().toString());
@@ -48,7 +49,7 @@ public class DiaryController {
      * 删除文章
      */
     @GetMapping("/deleteArticle")
-    @LoginCheck(1)
+    @RequirePermission(PermissionCode.USER_ADMIN)
     public PoetryResult deleteArticle(@RequestParam("id") Integer id) {
         PoetryCache.remove(CommonConst.USER_ARTICLE_LIST + PoetryUtil.getUserId().toString());
         return diaryService.deleteArticle(id);
@@ -59,7 +60,7 @@ public class DiaryController {
      * 更新文章
      */
     @PostMapping("/updateArticle")
-    @LoginCheck(1)
+    @RequirePermission(PermissionCode.USER_ADMIN)
     public PoetryResult updateArticle(@Validated @RequestBody ArticleVO articleVO) {
         return diaryService.updateArticle(articleVO);
     }

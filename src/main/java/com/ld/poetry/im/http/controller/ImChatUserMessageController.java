@@ -3,7 +3,8 @@ package com.ld.poetry.im.http.controller;
 
 import com.baomidou.mybatisplus.extension.conditions.query.LambdaQueryChainWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.ld.poetry.config.LoginCheck;
+import com.ld.poetry.annotation.RequirePermission;
+import com.ld.poetry.enums.PermissionCode;
 import com.ld.poetry.config.PoetryResult;
 import com.ld.poetry.entity.User;
 import com.ld.poetry.im.http.entity.ImChatUserMessage;
@@ -46,7 +47,7 @@ public class ImChatUserMessageController {
      * 获取系统消息（只获取前十条）
      */
     @GetMapping("/listSystemMessage")
-    @LoginCheck
+    @RequirePermission(PermissionCode.LOGIN_REQUIRED)
     public PoetryResult<Page> listSystemMessage(@RequestParam(value = "current", defaultValue = "1") Long current,
                                                 @RequestParam(value = "size", defaultValue = "10") Long size) {
         Page<ImChatUserMessage> page = new Page<>();
@@ -86,7 +87,7 @@ public class ImChatUserMessageController {
      * 管理员添加系统消息
      */
     @GetMapping("/saveSystemMessage")
-    @LoginCheck(0)
+    @RequirePermission(PermissionCode.SUPER_ADMIN)
     public PoetryResult saveSystemMessage(@RequestParam("content") String content) {
         ImChatUserMessage userMessage = new ImChatUserMessage();
         userMessage.setContent(content);
@@ -102,7 +103,7 @@ public class ImChatUserMessageController {
      * 删除系统消息
      */
     @GetMapping("/deleteSystemMessage")
-    @LoginCheck(0)
+    @RequirePermission(PermissionCode.SUPER_ADMIN)
     public PoetryResult deleteSystemMessage(@RequestParam("id") Integer id) {
         imChatUserMessageService.removeById(id);
         return PoetryResult.success();
@@ -112,7 +113,7 @@ public class ImChatUserMessageController {
      * 获取朋友消息（只获取前四十条）
      */
     @GetMapping("/listFriendMessage")
-    @LoginCheck
+    @RequirePermission(PermissionCode.LOGIN_REQUIRED)
     public PoetryResult<Page> listFriendMessage(@RequestParam(value = "current", defaultValue = "1") Long current,
                                                 @RequestParam(value = "size", defaultValue = "40") Long size,
                                                 @RequestParam(value = "friendId") Integer friendId) {

@@ -5,7 +5,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
-import com.ld.poetry.config.LoginCheck;
+import com.ld.poetry.annotation.RequirePermission;
+import com.ld.poetry.enums.PermissionCode;
 import com.ld.poetry.config.PoetryResult;
 import com.ld.poetry.service.CommentService;
 import com.ld.poetry.utils.CommonConst;
@@ -40,9 +41,8 @@ public class CommentController {
      * 保存评论
      */
     @PostMapping("/saveComment")
-    @LoginCheck
+    @RequirePermission(PermissionCode.FILE_UPLOAD_TOKEN)
     public PoetryResult saveComment(@Validated @RequestBody CommentVO commentVO) {
-        PoetryUtil.checkEmail();
         PoetryCache.remove(CommonConst.COMMENT_COUNT_CACHE + commentVO.getSource().toString());
         return commentService.saveComment(commentVO);
     }
@@ -52,9 +52,8 @@ public class CommentController {
      * 删除评论
      */
     @GetMapping("/deleteComment")
-    @LoginCheck
+    @RequirePermission(PermissionCode.FILE_UPLOAD_TOKEN)
     public PoetryResult deleteComment(@RequestParam("id") Integer id) {
-        PoetryUtil.checkEmail();
         return commentService.deleteComment(id);
     }
 
@@ -63,6 +62,7 @@ public class CommentController {
      * 查询评论数量
      */
     @GetMapping("/getCommentCount")
+    @RequirePermission(PermissionCode.PUBLIC)
     public PoetryResult<Integer> getCommentCount(@RequestParam("source") Integer source) {
         return PoetryResult.success(commonQuery.getCommentCount(source));
     }
@@ -72,6 +72,7 @@ public class CommentController {
      * 查询评论
      */
     @PostMapping("/listComment")
+    @RequirePermission(PermissionCode.PUBLIC)
     public PoetryResult<BaseRequestVO> listComment(@RequestBody BaseRequestVO baseRequestVO) {
         return commentService.listComment(baseRequestVO);
     }

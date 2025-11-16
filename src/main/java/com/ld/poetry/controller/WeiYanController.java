@@ -3,7 +3,8 @@ package com.ld.poetry.controller;
 
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.conditions.query.LambdaQueryChainWrapper;
-import com.ld.poetry.config.LoginCheck;
+import com.ld.poetry.annotation.RequirePermission;
+import com.ld.poetry.enums.PermissionCode;
 import com.ld.poetry.config.PoetryResult;
 import com.ld.poetry.dao.ArticleMapper;
 import com.ld.poetry.entity.Article;
@@ -40,9 +41,8 @@ public class WeiYanController {
      * 保存
      */
     @PostMapping("/saveWeiYan")
-    @LoginCheck
+    @RequirePermission(PermissionCode.FILE_UPLOAD_TOKEN)
     public PoetryResult saveWeiYan(@RequestBody WeiYan weiYanVO) {
-        PoetryUtil.checkEmail();
         if (!StringUtils.hasText(weiYanVO.getContent())) {
             return PoetryResult.fail("微言不能为空！");
         }
@@ -60,7 +60,7 @@ public class WeiYanController {
      * 保存
      */
     @PostMapping("/saveNews")
-    @LoginCheck
+    @RequirePermission(PermissionCode.LOGIN_REQUIRED)
     public PoetryResult saveNews(@RequestBody WeiYan weiYanVO) {
         if (!StringUtils.hasText(weiYanVO.getContent()) || weiYanVO.getSource() == null || weiYanVO.getCreateTime() == null) {
             return PoetryResult.fail("信息不全！");
@@ -90,6 +90,7 @@ public class WeiYanController {
      * 查询List
      */
     @PostMapping("/listNews")
+    @RequirePermission(PermissionCode.PUBLIC)
     public PoetryResult<BaseRequestVO> listNews(@RequestBody BaseRequestVO baseRequestVO) {
         if (baseRequestVO.getSource() == null) {
             return PoetryResult.fail("来源不能为空！");
@@ -107,9 +108,8 @@ public class WeiYanController {
      * 删除
      */
     @GetMapping("/deleteWeiYan")
-    @LoginCheck
+    @RequirePermission(PermissionCode.FILE_UPLOAD_TOKEN)
     public PoetryResult deleteWeiYan(@RequestParam("id") Integer id) {
-        PoetryUtil.checkEmail();
         Integer userId = PoetryUtil.getUserId();
         weiYanService.lambdaUpdate().eq(WeiYan::getId, id)
                 .eq(WeiYan::getUserId, userId)
@@ -122,6 +122,7 @@ public class WeiYanController {
      * 查询List
      */
     @PostMapping("/listWeiYan")
+    @RequirePermission(PermissionCode.PUBLIC)
     public PoetryResult<BaseRequestVO> listWeiYan(@RequestBody BaseRequestVO baseRequestVO) {
         LambdaQueryChainWrapper<WeiYan> lambdaQuery = weiYanService.lambdaQuery();
         lambdaQuery.eq(WeiYan::getType, CommonConst.WEIYAN_TYPE_FRIEND);

@@ -96,28 +96,24 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
             if (one.getUserType() != PoetryEnum.USER_TYPE_ADMIN.getCode() && one.getUserType() != PoetryEnum.USER_TYPE_DEV.getCode()) {
                 return PoetryResult.fail("请输入管理员账号！");
             }
-            if (PoetryCache.get(CommonConst.ADMIN_TOKEN + one.getId()) != null) {
-                String token = (String) PoetryCache.get(CommonConst.ADMIN_TOKEN + one.getId());
-                PoetryCache.remove(CommonConst.ADMIN_TOKEN + one.getId());
-                PoetryCache.remove(token);
-            }
-        } else {
-            if (PoetryCache.get(CommonConst.USER_TOKEN + one.getId()) != null) {
-                String token = (String) PoetryCache.get(CommonConst.USER_TOKEN + one.getId());
-                PoetryCache.remove(CommonConst.USER_TOKEN + one.getId());
-                PoetryCache.remove(token);
-            }
+            // JWT是无状态的，不需要清除旧token
         }
 
-        String uuid = UUID.randomUUID().toString().replaceAll("-", "");
-        if (isAdmin) {
-            PoetryCache.put(CommonConst.ADMIN_ACCESS_TOKEN + uuid, one, CommonConst.TOKEN_EXPIRE);
-            PoetryCache.put(CommonConst.ADMIN_TOKEN + one.getId(), CommonConst.ADMIN_ACCESS_TOKEN + uuid, CommonConst.TOKEN_EXPIRE);
+        // 生成JWT token - 根据用户类型确定权限
+        String userType;
+        if (one.getId().equals(CommonConst.ADMIN_ID) || one.getId().equals(1)) {
+            // 超级管理员 (支持ID为1和983341575的用户)
+            userType = CommonConst.USER_TYPE_SUPER_ADMIN;
+        } else if (isAdmin && (one.getUserType() == PoetryEnum.USER_TYPE_ADMIN.getCode() || one.getUserType() == PoetryEnum.USER_TYPE_DEV.getCode())) {
+            // 管理员
+            userType = CommonConst.USER_TYPE_ADMIN;
         } else {
-            PoetryCache.put(CommonConst.USER_ACCESS_TOKEN + uuid, one, CommonConst.TOKEN_EXPIRE);
-            PoetryCache.put(CommonConst.USER_TOKEN + one.getId(), CommonConst.USER_ACCESS_TOKEN + uuid, CommonConst.TOKEN_EXPIRE);
+            // 普通用户
+            userType = CommonConst.USER_TYPE_NORMAL;
         }
-
+        
+        JwtUtil jwtUtil = SpringContextUtil.getBean(JwtUtil.class);
+        String jwtToken = jwtUtil.generateToken(one.getId(), one.getUsername(), one.getEmail(), userType);
 
         UserVO userVO = new UserVO();
         BeanUtils.copyProperties(one, userVO);
@@ -126,25 +122,18 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
             userVO.setIsBoss(true);
         }
 
-        if (isAdmin) {
-            userVO.setAccessToken(CommonConst.ADMIN_ACCESS_TOKEN + uuid);
-        } else {
-            userVO.setAccessToken(CommonConst.USER_ACCESS_TOKEN + uuid);
-        }
+        userVO.setAccessToken(jwtToken);
         return PoetryResult.success(userVO);
     }
 
     @Override
     public PoetryResult exit() {
-        String token = PoetryUtil.getToken();
         Integer userId = PoetryUtil.getUserId();
-        if (token.contains(CommonConst.USER_ACCESS_TOKEN)) {
-            PoetryCache.remove(CommonConst.USER_TOKEN + userId);
+        if (userId != null) {
+            // 对于JWT，我们不需要从缓存中删除token，因为token是无状态的
+            // 只需要移除WebSocket连接
             Tio.removeUser(tioWebsocketStarter.getServerTioConfig(), String.valueOf(userId), "remove user");
-        } else if (token.contains(CommonConst.ADMIN_ACCESS_TOKEN)) {
-            PoetryCache.remove(CommonConst.ADMIN_TOKEN + userId);
         }
-        PoetryCache.remove(token);
         return PoetryResult.success();
     }
 
@@ -176,14 +165,14 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         save(u);
         User one = lambdaQuery().eq(User::getId, u.getId()).one();
 
-        String uuid = UUID.randomUUID().toString().replaceAll("-", "");
-        PoetryCache.put(CommonConst.USER_ACCESS_TOKEN + uuid, one, CommonConst.TOKEN_EXPIRE);
-        PoetryCache.put(CommonConst.USER_TOKEN + one.getId(), CommonConst.USER_ACCESS_TOKEN + uuid, CommonConst.TOKEN_EXPIRE);
+        // 生成JWT token
+        JwtUtil jwtUtil = SpringContextUtil.getBean(JwtUtil.class);
+        String jwtToken = jwtUtil.generateToken(one.getId(), one.getUsername(), one.getEmail(), CommonConst.USER_TYPE_NORMAL);
 
         UserVO userVO = new UserVO();
         BeanUtils.copyProperties(one, userVO);
         userVO.setPassword(null);
-        userVO.setAccessToken(CommonConst.USER_ACCESS_TOKEN + uuid);
+        userVO.setAccessToken(jwtToken);
 
         // WeiYan weiYan = new WeiYan();
         // weiYan.setUserId(one.getId());
@@ -239,8 +228,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         u.setPhoneNumber(null);
         updateById(u);
         User one = lambdaQuery().eq(User::getId, u.getId()).one();
-        PoetryCache.put(PoetryUtil.getToken(), one, CommonConst.TOKEN_EXPIRE);
-        PoetryCache.put(CommonConst.USER_TOKEN + one.getId(), PoetryUtil.getToken(), CommonConst.TOKEN_EXPIRE);
+        // JWT是无状态的，不需要更新缓存
 
         UserVO userVO = new UserVO();
         BeanUtils.copyProperties(one, userVO);
@@ -250,7 +238,12 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
 
     @Override
     public PoetryResult getCode(Integer flag) {
-        User user = PoetryUtil.getCurrentUser();
+        // 由于JWT是无状态的，我们需要从数据库获取用户信息
+        Integer userId = PoetryUtil.getUserId();
+        if (userId == null) {
+            return PoetryResult.fail("用户未登录");
+        }
+        User user = lambdaQuery().eq(User::getId, userId).one();
         int i = new Random().nextInt(900000) + 100000;
         if (flag == 1) {
             if (!StringUtils.hasText(user.getPhoneNumber())) {
@@ -344,8 +337,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         updateById(updateUser);
 
         User one = lambdaQuery().eq(User::getId, user.getId()).one();
-        PoetryCache.put(PoetryUtil.getToken(), one, CommonConst.TOKEN_EXPIRE);
-        PoetryCache.put(CommonConst.USER_TOKEN + one.getId(), PoetryUtil.getToken(), CommonConst.TOKEN_EXPIRE);
+        // JWT是无状态的，不需要更新缓存
 
         UserVO userVO = new UserVO();
         BeanUtils.copyProperties(one, userVO);

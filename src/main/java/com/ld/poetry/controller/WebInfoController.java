@@ -3,7 +3,8 @@ package com.ld.poetry.controller;
 
 import com.baomidou.mybatisplus.extension.conditions.query.LambdaQueryChainWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.ld.poetry.config.LoginCheck;
+import com.ld.poetry.annotation.RequirePermission;
+import com.ld.poetry.enums.PermissionCode;
 import com.ld.poetry.config.PoetryResult;
 import com.ld.poetry.dao.CollectionMapper;
 import com.ld.poetry.dao.LabelMapper;
@@ -65,7 +66,7 @@ public class WebInfoController {
     /**
      * 更新网站信息
      */
-    @LoginCheck(0)
+    @RequirePermission(PermissionCode.SUPER_ADMIN)
     @PostMapping("/updateWebInfo")
     public PoetryResult<WebInfo> updateWebInfo(@RequestBody WebInfo webInfo) {
         webInfoService.updateById(webInfo);
@@ -83,6 +84,7 @@ public class WebInfoController {
      * 获取网站信息
      */
     @GetMapping("/getWebInfo")
+    @RequirePermission(PermissionCode.PUBLIC)
     public PoetryResult<WebInfo> getWebInfo() {
         WebInfo webInfo = (WebInfo) PoetryCache.get(CommonConst.WEB_INFO);
         if (webInfo != null) {
@@ -101,6 +103,7 @@ public class WebInfoController {
      * 获取分类标签信息
      */
     @GetMapping("/getSortInfo")
+    @RequirePermission(PermissionCode.PUBLIC)
     public PoetryResult<List<Sort>> getSortInfo() {
         List<Sort> sortInfo = (List<Sort>) PoetryCache.get(CommonConst.SORT_INFO);
         if (sortInfo != null) {
@@ -113,6 +116,7 @@ public class WebInfoController {
      * 获取看板娘消息
      */
     @GetMapping("/getWaifuJson")
+    @RequirePermission(PermissionCode.PUBLIC)
     public String getWaifuJson() {
         WebInfo webInfo = (WebInfo) PoetryCache.get(CommonConst.WEB_INFO);
         if (webInfo != null && StringUtils.hasText(webInfo.getWaifuJson())) {
@@ -125,7 +129,7 @@ public class WebInfoController {
     /**
      * 保存
      */
-    @LoginCheck(0)
+    @RequirePermission(PermissionCode.SUPER_ADMIN)
     @PostMapping("/saveResourcePath")
     public PoetryResult saveResourcePath(@RequestBody ResourcePath resourcePath) {
         if (!StringUtils.hasText(resourcePath.getTitle()) || !StringUtils.hasText(resourcePath.getType())) {
@@ -138,10 +142,9 @@ public class WebInfoController {
     /**
      * 保存友链
      */
-    @LoginCheck
+    @RequirePermission(PermissionCode.FILE_UPLOAD_TOKEN)
     @PostMapping("/saveFriend")
     public PoetryResult saveFriend(@RequestBody ResourcePath resourcePath) {
-        PoetryUtil.checkEmail();
         if (!StringUtils.hasText(resourcePath.getTitle()) || !StringUtils.hasText(resourcePath.getCover()) ||
                 !StringUtils.hasText(resourcePath.getUrl()) || !StringUtils.hasText(resourcePath.getIntroduction())) {
             return PoetryResult.fail("信息不全！");
@@ -162,7 +165,7 @@ public class WebInfoController {
      * 删除
      */
     @GetMapping("/deleteResourcePath")
-    @LoginCheck(0)
+    @RequirePermission(PermissionCode.SUPER_ADMIN)
     public PoetryResult deleteResourcePath(@RequestParam("id") Integer id) {
         resourcePathMapper.deleteById(id);
         return PoetryResult.success();
@@ -173,7 +176,7 @@ public class WebInfoController {
      * 更新
      */
     @PostMapping("/updateResourcePath")
-    @LoginCheck(0)
+    @RequirePermission(PermissionCode.SUPER_ADMIN)
     public PoetryResult updateResourcePath(@RequestBody ResourcePath resourcePath) {
         if (!StringUtils.hasText(resourcePath.getTitle()) || !StringUtils.hasText(resourcePath.getType())) {
             return PoetryResult.fail("标题和资源类型不能为空！");
@@ -190,6 +193,7 @@ public class WebInfoController {
      * 查询资源
      */
     @PostMapping("/listResourcePath")
+    @RequirePermission(PermissionCode.PUBLIC)
     public PoetryResult<Page> listResourcePath(@RequestBody BaseRequestVO baseRequestVO) {
         LambdaQueryChainWrapper<ResourcePath> wrapper = new LambdaQueryChainWrapper<>(resourcePathMapper);
         wrapper.eq(StringUtils.hasText(baseRequestVO.getResourceType()), ResourcePath::getType, baseRequestVO.getResourceType());
@@ -210,6 +214,7 @@ public class WebInfoController {
      * 保存
      */
     @PostMapping("/saveTreeHole")
+    @RequirePermission(PermissionCode.PUBLIC)
     public PoetryResult<TreeHole> saveTreeHole(@RequestBody TreeHole treeHole) {
         if (!StringUtils.hasText(treeHole.getMessage())) {
             return PoetryResult.fail("留言不能为空！");
@@ -226,7 +231,7 @@ public class WebInfoController {
      * 删除
      */
     @GetMapping("/deleteTreeHole")
-    @LoginCheck(0)
+    @RequirePermission(PermissionCode.SUPER_ADMIN)
     public PoetryResult deleteTreeHole(@RequestParam("id") Integer id) {
         treeHoleMapper.deleteById(id);
         return PoetryResult.success();
@@ -237,6 +242,7 @@ public class WebInfoController {
      * 查询List
      */
     @GetMapping("/listTreeHole")
+    @RequirePermission(PermissionCode.PUBLIC)
     public PoetryResult<List<TreeHole>> listTreeHole() {
         List<TreeHole> treeHoles;
         Integer count = new LambdaQueryChainWrapper<>(treeHoleMapper).count();
@@ -261,7 +267,7 @@ public class WebInfoController {
      * 保存
      */
     @PostMapping("/saveSort")
-    @LoginCheck(0)
+    @RequirePermission(PermissionCode.SUPER_ADMIN)
     public PoetryResult saveSort(@RequestBody Sort sort) {
         if (!StringUtils.hasText(sort.getSortName()) || !StringUtils.hasText(sort.getSortDescription())) {
             return PoetryResult.fail("分类名称和分类描述不能为空！");
@@ -284,7 +290,7 @@ public class WebInfoController {
      * 删除
      */
     @GetMapping("/deleteSort")
-    @LoginCheck(0)
+    @RequirePermission(PermissionCode.SUPER_ADMIN)
     public PoetryResult deleteSort(@RequestParam("id") Integer id) {
         sortMapper.deleteById(id);
         List<Sort> sortInfo = commonQuery.getSortInfo();
@@ -299,7 +305,7 @@ public class WebInfoController {
      * 更新
      */
     @PostMapping("/updateSort")
-    @LoginCheck(0)
+    @RequirePermission(PermissionCode.SUPER_ADMIN)
     public PoetryResult updateSort(@RequestBody Sort sort) {
         sortMapper.updateById(sort);
         List<Sort> sortInfo = commonQuery.getSortInfo();
@@ -314,6 +320,7 @@ public class WebInfoController {
      * 查询List
      */
     @GetMapping("/listSort")
+    @RequirePermission(PermissionCode.PUBLIC)
     public PoetryResult<List<Sort>> listSort() {
         return PoetryResult.success(new LambdaQueryChainWrapper<>(sortMapper).list());
     }
@@ -323,7 +330,7 @@ public class WebInfoController {
      * 保存
      */
     @PostMapping("/saveLabel")
-    @LoginCheck(0)
+    @RequirePermission(PermissionCode.SUPER_ADMIN)
     public PoetryResult saveLabel(@RequestBody Label label) {
         if (!StringUtils.hasText(label.getLabelName()) || !StringUtils.hasText(label.getLabelDescription()) || label.getSortId() == null) {
             return PoetryResult.fail("标签名称和标签描述和分类Id不能为空！");
@@ -341,7 +348,7 @@ public class WebInfoController {
      * 删除
      */
     @GetMapping("/deleteLabel")
-    @LoginCheck(0)
+    @RequirePermission(PermissionCode.SUPER_ADMIN)
     public PoetryResult deleteLabel(@RequestParam("id") Integer id) {
         labelMapper.deleteById(id);
         List<Sort> sortInfo = commonQuery.getSortInfo();
@@ -356,7 +363,7 @@ public class WebInfoController {
      * 更新
      */
     @PostMapping("/updateLabel")
-    @LoginCheck(0)
+    @RequirePermission(PermissionCode.SUPER_ADMIN)
     public PoetryResult updateLabel(@RequestBody Label label) {
         labelMapper.updateById(label);
         List<Sort> sortInfo = commonQuery.getSortInfo();
@@ -371,6 +378,7 @@ public class WebInfoController {
      * 查询List
      */
     @GetMapping("/listLabel")
+    @RequirePermission(PermissionCode.PUBLIC)
     public PoetryResult<List<Label>> listLabel() {
         return PoetryResult.success(new LambdaQueryChainWrapper<>(labelMapper).list());
     }
@@ -380,6 +388,7 @@ public class WebInfoController {
      * 查询List
      */
     @GetMapping("/listSortAndLabel")
+    @RequirePermission(PermissionCode.PUBLIC)
     public PoetryResult<Map> listSortAndLabel() {
         Map<String, List> map = new HashMap<>();
         map.put("sorts", new LambdaQueryChainWrapper<>(sortMapper).list());

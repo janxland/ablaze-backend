@@ -13,7 +13,8 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.ld.poetry.config.LoginCheck;
+import com.ld.poetry.annotation.RequirePermission;
+import com.ld.poetry.enums.PermissionCode;
 import com.ld.poetry.config.PoetryResult;
 import com.ld.poetry.entity.Todolist;
 import com.ld.poetry.service.TodolistService;
@@ -40,7 +41,7 @@ public class TodolistController {
     /**
      * 保存任务
      */
-    @LoginCheck(1)
+    @RequirePermission(PermissionCode.USER_ADMIN)
     @PostMapping("/saveTask")
     public PoetryResult saveTask(@Validated @RequestBody Todolist todolistVO) {
         // PoetryCache.remove(CommonConst.USER_ARTICLE_LIST + PoetryUtil.getUserId().toString());
@@ -52,7 +53,7 @@ public class TodolistController {
      * 删除任务
      */
     @GetMapping("/deleteTask")
-    @LoginCheck(1)
+    @RequirePermission(PermissionCode.USER_ADMIN)
     public PoetryResult deleteTask(@RequestParam("id") Integer id) {
         PoetryCache.remove(CommonConst.USER_ARTICLE_LIST + PoetryUtil.getUserId().toString());
         return todolistService.deleteTask(id);
@@ -63,7 +64,7 @@ public class TodolistController {
      * 更新任务
      */
     @PostMapping("/updateTask")
-    @LoginCheck(1)
+    @RequirePermission(PermissionCode.USER_ADMIN)
     public PoetryResult updateTask(@Validated @RequestBody Todolist todolistVO) {
         return todolistService.updateTask(todolistVO);
     }
@@ -73,6 +74,7 @@ public class TodolistController {
      * 查询任务List
      */
     @PostMapping("/listTask")
+    @RequirePermission(PermissionCode.PUBLIC)
     public PoetryResult<List<Todolist>> listTask(@RequestBody Todolist todolistVO) {
         return todolistService.listTask(todolistVO);
     }
@@ -83,6 +85,7 @@ public class TodolistController {
      * flag = true：查询可见的任务
      */
     @GetMapping("/getTaskById")
+    @RequirePermission(PermissionCode.PUBLIC)
     public PoetryResult<Todolist> getTaskById(@RequestParam("id") Integer id, @RequestParam("flag") Boolean flag, @RequestParam(value = "password", required = false) String password) {
         return todolistService.getTaskById(id, flag, password);
     }

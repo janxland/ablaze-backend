@@ -3,7 +3,8 @@ package com.ld.poetry.controller;
 import com.baomidou.mybatisplus.extension.conditions.query.LambdaQueryChainWrapper;
 import com.baomidou.mybatisplus.extension.conditions.update.LambdaUpdateChainWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.ld.poetry.config.LoginCheck;
+import com.ld.poetry.annotation.RequirePermission;
+import com.ld.poetry.enums.PermissionCode;
 import com.ld.poetry.config.PoetryResult;
 import com.ld.poetry.dao.TreeHoleMapper;
 import com.ld.poetry.dao.WebInfoMapper;
@@ -51,7 +52,7 @@ public class AdminController {
      * 查询用户
      */
     @PostMapping("/user/list")
-    @LoginCheck(0)
+    @RequirePermission(PermissionCode.SUPER_ADMIN)
     public PoetryResult<Page> listUser(@RequestBody BaseRequestVO baseRequestVO) {
         return userService.listUser(baseRequestVO);
     }
@@ -63,7 +64,7 @@ public class AdminController {
      * flag = false：封禁
      */
     @GetMapping("/user/changeUserStatus")
-    @LoginCheck(0)
+    @RequirePermission(PermissionCode.SUPER_ADMIN)
     public PoetryResult changeUserStatus(@RequestParam("userId") Integer userId, @RequestParam("flag") Boolean flag) {
         LambdaUpdateChainWrapper<User> updateChainWrapper = userService.lambdaUpdate().eq(User::getId, userId);
         if (flag) {
@@ -79,7 +80,7 @@ public class AdminController {
      * 修改用户类型
      */
     @GetMapping("/user/changeUserType")
-    @LoginCheck(0)
+    @RequirePermission(PermissionCode.SUPER_ADMIN)
     public PoetryResult changeUserType(@RequestParam("userId") Integer userId, @RequestParam("userType") Integer userType) {
         if (userType != 0 && userType != 1 && userType != 2) {
             return PoetryResult.fail(CodeMsg.PARAMETER_ERROR);
@@ -109,7 +110,7 @@ public class AdminController {
      * 获取网站信息
      */
     @GetMapping("/webInfo/getAdminWebInfo")
-    @LoginCheck(0)
+    @RequirePermission(PermissionCode.SUPER_ADMIN)
     public PoetryResult<WebInfo> getWebInfo() {
         LambdaQueryChainWrapper<WebInfo> wrapper = new LambdaQueryChainWrapper<>(webInfoMapper);
         List<WebInfo> list = wrapper.list();
@@ -125,7 +126,7 @@ public class AdminController {
      * 用户查询文章
      */
     @PostMapping("/article/user/list")
-    @LoginCheck(1)
+    @RequirePermission(PermissionCode.USER_ADMIN)
     public PoetryResult<Page> listUserArticle(@RequestBody BaseRequestVO baseRequestVO) {
         return articleService.listAdminArticle(baseRequestVO, false);
     }
@@ -135,7 +136,7 @@ public class AdminController {
      * Boss查询文章
      */
     @PostMapping("/article/boss/list")
-    @LoginCheck(0)
+    @RequirePermission(PermissionCode.SUPER_ADMIN)
     public PoetryResult<Page> listBossArticle(@RequestBody BaseRequestVO baseRequestVO) {
         return articleService.listAdminArticle(baseRequestVO, true);
     }
@@ -144,7 +145,7 @@ public class AdminController {
      * 修改文章状态
      */
     @GetMapping("/article/changeArticleStatus")
-    @LoginCheck(1)
+    @RequirePermission(PermissionCode.USER_ADMIN)
     public PoetryResult changeArticleStatus(@RequestParam("articleId") Integer articleId,
                                             @RequestParam(value = "viewStatus", required = false) Boolean viewStatus,
                                             @RequestParam(value = "commentStatus", required = false) Boolean commentStatus,
@@ -169,7 +170,7 @@ public class AdminController {
      * 查询文章
      */
     @GetMapping("/article/getArticleById")
-    @LoginCheck(1)
+    @RequirePermission(PermissionCode.USER_ADMIN)
     public PoetryResult<ArticleVO> getArticleByIdForUser(@RequestParam("id") Integer id) {
         return articleService.getArticleByIdForUser(id);
     }
@@ -177,7 +178,7 @@ public class AdminController {
      * 查询日记
      */
     @GetMapping("/diary/getArticleById")
-    @LoginCheck(1)
+    @RequirePermission(PermissionCode.USER_ADMIN)
     public PoetryResult<ArticleVO> getDiaryByIdForUser(@RequestParam("id") Integer id) {
         return diaryService.getArticleByIdForUser(id);
     }
@@ -185,7 +186,7 @@ public class AdminController {
      * 作者删除评论
      */
     @GetMapping("/comment/user/deleteComment")
-    @LoginCheck(1)
+    @RequirePermission(PermissionCode.USER_ADMIN)
     public PoetryResult userDeleteComment(@RequestParam("id") Integer id) {
         Comment comment = commentService.lambdaQuery().select(Comment::getSource).eq(Comment::getId, id).one();
         if (comment == null) {
@@ -206,7 +207,7 @@ public class AdminController {
      * Boss删除评论
      */
     @GetMapping("/comment/boss/deleteComment")
-    @LoginCheck(0)
+    @RequirePermission(PermissionCode.SUPER_ADMIN)
     public PoetryResult bossDeleteComment(@RequestParam("id") Integer id) {
         commentService.removeById(id);
         return PoetryResult.success();
@@ -216,7 +217,7 @@ public class AdminController {
      * 用户查询评论
      */
     @PostMapping("/comment/user/list")
-    @LoginCheck(1)
+    @RequirePermission(PermissionCode.USER_ADMIN)
     public PoetryResult<Page> listUserComment(@RequestBody BaseRequestVO baseRequestVO) {
         return commentService.listAdminComment(baseRequestVO, false);
     }
@@ -225,7 +226,7 @@ public class AdminController {
      * Boss查询评论
      */
     @PostMapping("/comment/boss/list")
-    @LoginCheck(0)
+    @RequirePermission(PermissionCode.SUPER_ADMIN)
     public PoetryResult<Page> listBossComment(@RequestBody BaseRequestVO baseRequestVO) {
         return commentService.listAdminComment(baseRequestVO, true);
     }
@@ -234,10 +235,11 @@ public class AdminController {
      * Boss查询树洞
      */
     @PostMapping("/treeHole/boss/list")
-    @LoginCheck(0)
+    @RequirePermission(PermissionCode.SUPER_ADMIN)
     public PoetryResult<Page> listBossTreeHole(@RequestBody BaseRequestVO baseRequestVO) {
         LambdaQueryChainWrapper<TreeHole> wrapper = new LambdaQueryChainWrapper<>(treeHoleMapper);
         wrapper.orderByDesc(TreeHole::getCreateTime).page((Page)baseRequestVO);
         return PoetryResult.success(baseRequestVO);
     }
+
 }

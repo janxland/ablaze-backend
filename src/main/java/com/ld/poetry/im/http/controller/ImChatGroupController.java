@@ -4,7 +4,8 @@ package com.ld.poetry.im.http.controller;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.conditions.query.LambdaQueryChainWrapper;
 import com.baomidou.mybatisplus.extension.conditions.update.LambdaUpdateChainWrapper;
-import com.ld.poetry.config.LoginCheck;
+import com.ld.poetry.annotation.RequirePermission;
+import com.ld.poetry.enums.PermissionCode;
 import com.ld.poetry.config.PoetryResult;
 import com.ld.poetry.entity.User;
 import com.ld.poetry.im.http.entity.ImChatGroup;
@@ -61,9 +62,8 @@ public class ImChatGroupController {
      * 创建群组
      */
     @PostMapping("/creatGroupCommon")
-    @LoginCheck
+    @RequirePermission(PermissionCode.LOGIN_REQUIRED)
     public PoetryResult creatGroup(@RequestBody ImChatGroup imChatGroup) {
-        PoetryUtil.checkEmail();
         if (!StringUtils.hasText(imChatGroup.getGroupName())) {
             return PoetryResult.fail(CodeMsg.PARAMETER_ERROR);
         }
@@ -88,7 +88,7 @@ public class ImChatGroupController {
      * 创建话题
      */
     @PostMapping("/creatGroupTopic")
-    @LoginCheck(0)
+    @RequirePermission(PermissionCode.SUPER_ADMIN)
     public PoetryResult creatGroupTopic(@RequestBody ImChatGroup imChatGroup) {
         if (!StringUtils.hasText(imChatGroup.getGroupName())) {
             return PoetryResult.fail(CodeMsg.PARAMETER_ERROR);
@@ -109,9 +109,8 @@ public class ImChatGroupController {
      * 只有群主才能修改组
      */
     @PostMapping("/updateGroup")
-    @LoginCheck
+    @RequirePermission(PermissionCode.LOGIN_REQUIRED)
     public PoetryResult updateGroup(@RequestBody ImChatGroup imChatGroup) {
-        PoetryUtil.checkEmail();
         LambdaUpdateChainWrapper<ImChatGroup> lambdaUpdate = imChatGroupService.lambdaUpdate();
         lambdaUpdate.eq(ImChatGroup::getId, imChatGroup.getId());
         lambdaUpdate.eq(ImChatGroup::getMasterUserId, PoetryUtil.getUserId());
@@ -147,9 +146,8 @@ public class ImChatGroupController {
      * 解散群
      */
     @GetMapping("/deleteGroup")
-    @LoginCheck
+    @RequirePermission(PermissionCode.LOGIN_REQUIRED)
     public PoetryResult deleteGroup(@RequestParam("id") Integer id) {
-        PoetryUtil.checkEmail();
         User currentUser = PoetryUtil.getCurrentUser();
         boolean isSuccess;
         if (currentUser.getUserType().intValue() == PoetryEnum.USER_TYPE_ADMIN.getCode()) {
@@ -176,7 +174,7 @@ public class ImChatGroupController {
      * 管理员查询所有群
      */
     @PostMapping("/listGroupForAdmin")
-    @LoginCheck(0)
+    @RequirePermission(PermissionCode.SUPER_ADMIN)
     public PoetryResult<BaseRequestVO> listGroupForAdmin(@RequestBody BaseRequestVO baseRequestVO) {
         LambdaQueryChainWrapper<ImChatGroup> lambdaQuery = imChatGroupService.lambdaQuery();
         lambdaQuery.orderByDesc(ImChatGroup::getCreateTime).page((IPage)baseRequestVO);
@@ -187,7 +185,7 @@ public class ImChatGroupController {
      * 加入话题
      */
     @GetMapping("/addGroupTopic")
-    @LoginCheck
+    @RequirePermission(PermissionCode.LOGIN_REQUIRED)
     public PoetryResult addGroupTopic(@RequestParam("id") Integer id) {
         LambdaQueryChainWrapper<ImChatGroup> lambdaQuery = imChatGroupService.lambdaQuery();
         Integer count = lambdaQuery.eq(ImChatGroup::getId, id)
@@ -204,7 +202,7 @@ public class ImChatGroupController {
      * 只查询审核通过和禁言的群
      */
     @GetMapping("/listGroup")
-    @LoginCheck
+    @RequirePermission(PermissionCode.LOGIN_REQUIRED)
     public PoetryResult<List<GroupVO>> listGroup() {
         Integer userId = PoetryUtil.getUserId();
         LambdaQueryChainWrapper<ImChatGroupUser> lambdaQuery = imChatGroupUserService.lambdaQuery();

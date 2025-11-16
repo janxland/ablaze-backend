@@ -4,7 +4,8 @@ package com.ld.poetry.im.http.controller;
 import com.baomidou.mybatisplus.extension.conditions.query.LambdaQueryChainWrapper;
 import com.baomidou.mybatisplus.extension.conditions.update.LambdaUpdateChainWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.ld.poetry.config.LoginCheck;
+import com.ld.poetry.annotation.RequirePermission;
+import com.ld.poetry.enums.PermissionCode;
 import com.ld.poetry.config.PoetryResult;
 import com.ld.poetry.entity.User;
 import com.ld.poetry.im.http.entity.ImChatGroup;
@@ -38,7 +39,7 @@ import java.util.stream.Collectors;
  * </p>
  *
  * @author sara
- * @since 2021-12-02
+ * @RequirePermission(PermissionCode.SUPER_ADMIN)21-12-02
  */
 @RestController
 @RequestMapping("/imChatGroupUser")
@@ -60,9 +61,8 @@ public class ImChatGroupUserController {
      * 申请加群
      */
     @GetMapping("/enterGroup")
-    @LoginCheck
+    @RequirePermission(PermissionCode.LOGIN_REQUIRED)
     public PoetryResult enterGroup(@RequestParam("id") Integer id, @RequestParam(value = "remark", required = false) String remark) {
-        PoetryUtil.checkEmail();
         ImChatGroup chatGroup = imChatGroupService.getById(id);
         if (chatGroup == null) {
             return PoetryResult.fail("群组不存在！");
@@ -106,12 +106,11 @@ public class ImChatGroupUserController {
      * 用户状态[-1:审核不通过或者踢出群组，1:审核通过，2:禁言]
      */
     @GetMapping("/changeUserStatus")
-    @LoginCheck
+    @RequirePermission(PermissionCode.LOGIN_REQUIRED)
     public PoetryResult changeUserStatus(@RequestParam("groupId") Integer groupId,
                                          @RequestParam("userId") Integer userId,
                                          @RequestParam("userStatus") Integer userStatus,
                                          @RequestParam("oldUserStatus") Integer oldUserStatus) {
-        PoetryUtil.checkEmail();
         ImChatGroup chatGroup = imChatGroupService.getById(groupId);
         if (chatGroup == null) {
             return PoetryResult.fail("群组不存在！");
@@ -173,11 +172,10 @@ public class ImChatGroupUserController {
      * adminFlag = false 不是管理员
      */
     @GetMapping("/changeAdmin")
-    @LoginCheck
+    @RequirePermission(PermissionCode.LOGIN_REQUIRED)
     public PoetryResult changeAdmin(@RequestParam("groupId") Integer groupId,
                                     @RequestParam("userId") Integer userId,
                                     @RequestParam("adminFlag") Boolean adminFlag) {
-        PoetryUtil.checkEmail();
         ImChatGroup chatGroup = imChatGroupService.getById(groupId);
         if (chatGroup == null) {
             return PoetryResult.fail("群组不存在！");
@@ -205,9 +203,8 @@ public class ImChatGroupUserController {
      * 退群
      */
     @GetMapping("/quitGroup")
-    @LoginCheck
+    @RequirePermission(PermissionCode.LOGIN_REQUIRED)
     public PoetryResult quitGroup(@RequestParam("id") Integer id) {
-        PoetryUtil.checkEmail();
         ImChatGroup chatGroup = imChatGroupService.getById(id);
         if (chatGroup == null) {
             return PoetryResult.fail("群组不存在！");
@@ -255,12 +252,11 @@ public class ImChatGroupUserController {
      * 群管理员查询群用户
      */
     @GetMapping("/getGroupUserByStatus")
-    @LoginCheck
+    @RequirePermission(PermissionCode.LOGIN_REQUIRED)
     public PoetryResult<Page> getGroupUserByStatus(@RequestParam(value = "groupId", required = false) Integer groupId,
                                                    @RequestParam(value = "userStatus", required = false) Integer userStatus,
                                                    @RequestParam(value = "current", defaultValue = "1") Long current,
                                                    @RequestParam(value = "size", defaultValue = "20") Long size) {
-        PoetryUtil.checkEmail();
         Integer userId = PoetryUtil.getUserId();
         Page<ImChatGroupUser> page = new Page<>();
         page.setCurrent(current);
@@ -337,7 +333,7 @@ public class ImChatGroupUserController {
      * 群用户查询群用户
      */
     @GetMapping("/getGroupUser")
-    @LoginCheck
+    @RequirePermission(PermissionCode.LOGIN_REQUIRED)
     public PoetryResult<Page> getGroupUser(@RequestParam("groupId") Integer groupId,
                                            @RequestParam(value = "current", defaultValue = "1") Long current,
                                            @RequestParam(value = "size", defaultValue = "20") Long size) {

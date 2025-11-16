@@ -2,7 +2,8 @@ package com.ld.poetry.im.http.controller;
 
 
 import com.baomidou.mybatisplus.extension.conditions.query.LambdaQueryChainWrapper;
-import com.ld.poetry.config.LoginCheck;
+import com.ld.poetry.annotation.RequirePermission;
+import com.ld.poetry.enums.PermissionCode;
 import com.ld.poetry.config.PoetryResult;
 import com.ld.poetry.entity.User;
 import com.ld.poetry.im.http.entity.ImChatUserFriend;
@@ -44,9 +45,8 @@ public class ImChatUserFriendController {
      * 添加好友申请
      */
     @GetMapping("/addFriend")
-    @LoginCheck
+    @RequirePermission(PermissionCode.LOGIN_REQUIRED)
     public PoetryResult addFriend(@RequestParam("friendId") Integer friendId, @RequestParam(value = "remark", required = false) String remark) {
-        PoetryUtil.checkEmail();
         User friend = commonQuery.getUser(friendId);
         if (friend == null) {
             return PoetryResult.fail("用户不存在！");
@@ -75,7 +75,7 @@ public class ImChatUserFriendController {
      * 查询好友
      */
     @GetMapping("/getFriend")
-    @LoginCheck
+    @RequirePermission(PermissionCode.LOGIN_REQUIRED)
     public PoetryResult<List<UserFriendVO>> getFriend(@RequestParam(value = "friendStatus", required = false) Integer friendStatus) {
         Integer userId = PoetryUtil.getUserId();
         LambdaQueryChainWrapper<ImChatUserFriend> wrapper = userFriendService.lambdaQuery().eq(ImChatUserFriend::getUserId, userId);
@@ -111,11 +111,10 @@ public class ImChatUserFriendController {
      * 朋友状态[-1:审核不通过或者删除好友，0:未审核，1:审核通过]
      */
     @GetMapping("/changeFriend")
-    @LoginCheck
+    @RequirePermission(PermissionCode.LOGIN_REQUIRED)
     public PoetryResult changeFriend(@RequestParam("friendId") Integer friendId,
                                      @RequestParam(value = "friendStatus", required = false) Integer friendStatus,
                                      @RequestParam(value = "remark", required = false) String remark) {
-        PoetryUtil.checkEmail();
         Integer userId = PoetryUtil.getUserId();
         ImChatUserFriend userFriend = userFriendService.lambdaQuery()
                 .eq(ImChatUserFriend::getUserId, userId)

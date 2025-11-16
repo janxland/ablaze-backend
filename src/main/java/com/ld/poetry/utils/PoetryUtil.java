@@ -21,8 +21,8 @@ public class PoetryUtil {
     }
 
     public static void checkEmail() {
-        User user = (User) PoetryCache.get(PoetryUtil.getToken());
-        if (!StringUtils.hasText(user.getEmail())) {
+        String email = AuthUtil.getCurrentEmail();
+        if (!StringUtils.hasText(email)) {
             throw new PoetryRuntimeException("请先绑定邮箱！");
         }
     }
@@ -37,8 +37,9 @@ public class PoetryUtil {
     }
 
     public static User getCurrentUser() {
-        User user = (User) PoetryCache.get(PoetryUtil.getToken());
-        return user;
+        // 注意：这个方法现在返回null，因为我们不再从缓存获取完整用户对象
+        // 如果需要完整用户信息，应该通过用户ID查询数据库
+        return null;
     }
 
     public static User getAdminUser() {
@@ -47,16 +48,11 @@ public class PoetryUtil {
     }
 
     public static Integer getUserId() {
-        if(PoetryUtil.getToken()==null){
-            return null;
-        }
-        User user = (User) PoetryCache.get(PoetryUtil.getToken());
-        return user == null ? null : user.getId();
+        return AuthUtil.getCurrentLocalUserId();
     }
 
     public static String getUsername() {
-        User user = (User) PoetryCache.get(PoetryUtil.getToken());
-        return user == null ? null : user.getUsername();
+        return AuthUtil.getCurrentUsername();
     }
 
     public static String getRandomAvatar(String key) {
