@@ -65,13 +65,17 @@ public class UserCacheService {
         try {
             // 解析JWT基本信息
             String authSource = jwtUtil.getAuthSourceFromToken(token);
+            Integer userId = jwtUtil.getUserIdFromToken(token);
             Integer authCenterUserId = jwtUtil.getAuthCenterUserIdFromToken(token);
             String username = jwtUtil.getUsernameFromToken(token);
             String email = jwtUtil.getEmailFromToken(token);
             String jwtUserType = jwtUtil.getUserTypeFromToken(token);
 
+            // 对于本地项目，使用userId作为映射ID
+            Integer mappingId = authCenterUserId != null ? authCenterUserId : userId;
+            
             // 生成缓存key
-            String cacheKey = USER_CACHE_PREFIX + authSource + ":" + authCenterUserId;
+            String cacheKey = USER_CACHE_PREFIX + authSource + ":" + mappingId;
 
             // 1. 先从缓存获取
             String cachedData = redisTemplate.opsForValue().get(cacheKey);
@@ -82,23 +86,30 @@ public class UserCacheService {
             }
 
             // 2. 缓存未命中，查询数据库
-            log.info("缓存未命中，查询数据库 - 认证来源: {}, 认证中心ID: {}, 用户名: {}", 
-                    authSource, authCenterUserId, username);
+            log.info("缓存未命中，查询数据库 - 认证来源: {}, 映射ID: {}, 用户名: {}", 
+                    authSource, mappingId, username);
 
             CachedUserInfo userInfo;
 
             if ("auth-center".equals(authSource)) {
                 // 认证中心用户处理
-                userInfo = handleAuthCenterUser(authCenterUserId, username, email, jwtUserType);
+                userInfo = handleAuthCenterUser(mappingId, username, email, jwtUserType);
             } else {
-                // 本地用户直接查询
-                User localUser = userService.getById(authCenterUserId);
+                // 本地项目用户处理
+                User localUser = userService.getById(mappingId);
                 if (localUser != null) {
+                    // 对于本地项目token，优先使用JWT中的用户类型
+                    String finalUserType = jwtUserType;
+                    if (!StringUtils.hasText(finalUserType)) {
+                        // 如果JWT中没有用户类型，则使用数据库转换
+                        finalUserType = convertUserType(localUser.getUserType());
+                    }
+                    
                     userInfo = new CachedUserInfo(
                         localUser.getId(),
                         localUser.getUsername(),
                         localUser.getEmail(),
-                        convertUserType(localUser.getUserType()),
+                        finalUserType,
                         true
                     );
                 } else {

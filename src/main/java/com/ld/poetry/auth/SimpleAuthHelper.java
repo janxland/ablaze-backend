@@ -78,18 +78,36 @@ public class SimpleAuthHelper {
     }
 
     /**
-     * 提取JWT token - 只从Authorization header获取
+     * 提取JWT token - 支持Authorization header和Cookie
      */
     private String extractToken(HttpServletRequest request) {
+        // 1. 优先从Authorization header获取
         String authHeader = request.getHeader("Authorization");
         if (StringUtils.hasText(authHeader)) {
+            // 支持带Bearer前缀和不带前缀的token
             if (authHeader.startsWith("Bearer ")) {
                 return authHeader.substring(7);
             } else {
-                // 直接是token，不需要Bearer前缀
                 return authHeader;
             }
         }
+        
+        // 2. 从Cookie中获取sso_access_token（适用于*.roginx.ink域名）
+        javax.servlet.http.Cookie[] cookies = request.getCookies();
+        log.info("检查Cookie - cookies数量: {}", cookies != null ? cookies.length : 0);
+        if (cookies != null) {
+            for (javax.servlet.http.Cookie cookie : cookies) {
+                log.info("Cookie: {} = {}", cookie.getName(), cookie.getValue().substring(0, Math.min(20, cookie.getValue().length())) + "...");
+                if ("sso_access_token".equals(cookie.getName())) {
+                    String token = cookie.getValue();
+                    if (StringUtils.hasText(token)) {
+                        log.info("从Cookie获取到sso_access_token: {}", token.substring(0, Math.min(20, token.length())) + "...");
+                        return token;
+                    }
+                }
+            }
+        }
+        
         return null;
     }
 

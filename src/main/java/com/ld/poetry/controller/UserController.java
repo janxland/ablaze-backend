@@ -6,6 +6,9 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import com.ld.poetry.annotation.RequirePermission;
+import com.ld.poetry.auth.AuthContext;
+import com.ld.poetry.auth.SimpleAuthHelper;
+import com.ld.poetry.entity.User;
 import com.ld.poetry.enums.PermissionCode;
 import com.ld.poetry.config.PoetryResult;
 import com.ld.poetry.service.UserService;
@@ -30,6 +33,9 @@ public class UserController {
 
     @Autowired
     private UserService userService;
+
+    @Autowired
+    private SimpleAuthHelper simpleAuthHelper;
 
 
     /**
@@ -58,6 +64,52 @@ public class UserController {
     @PostMapping("/token")
     public PoetryResult<UserVO> login(@RequestParam("userToken") String userToken) {
         return userService.token(userToken);
+    }
+
+    /**
+     * 根据Token获取用户信息 - 用户Profile自查
+     * 自动解析token获得用户ID映射，获取本业务真实ID的用户信息
+     */
+    @GetMapping("/info")
+    @RequirePermission(PermissionCode.LOGIN_REQUIRED)
+    public PoetryResult<UserVO> getUserInfo() {
+        try {
+            // 从当前认证上下文获取用户信息
+            AuthContext.UserInfo currentUser = AuthContext.getCurrentUser();
+            if (currentUser == null) {
+                return PoetryResult.fail("用户未登录");
+            }
+
+            // 获取本地用户ID（已经通过token映射得到）
+            Integer localUserId = currentUser.getUserId();
+            
+            // 通过本地用户ID获取完整的用户信息
+            User user = userService.getById(localUserId);
+            if (user == null) {
+                return PoetryResult.fail("用户信息不存在");
+            }
+
+            // 转换为UserVO并补充认证相关信息
+            UserVO userInfo = new UserVO();
+            userInfo.setId(user.getId());
+            userInfo.setUsername(user.getUsername());
+            userInfo.setEmail(user.getEmail());
+            userInfo.setPhoneNumber(user.getPhoneNumber());
+            userInfo.setIntroduction(user.getIntroduction());
+            userInfo.setAvatar(user.getAvatar());
+            userInfo.setGender(user.getGender());
+            userInfo.setCreateTime(user.getCreateTime());
+            userInfo.setUpdateTime(user.getUpdateTime());
+            userInfo.setUpdateBy(user.getUpdateBy());
+            
+            // 设置访问令牌（如果需要的话）
+            userInfo.setAccessToken(null); // 不返回敏感信息
+            
+            return PoetryResult.success(userInfo);
+            
+        } catch (Exception e) {
+            return PoetryResult.fail("获取用户信息失败: " + e.getMessage());
+        }
     }
 
 

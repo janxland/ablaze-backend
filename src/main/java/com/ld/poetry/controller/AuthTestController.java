@@ -4,7 +4,8 @@ import com.ld.poetry.annotation.RequirePermission;
 import com.ld.poetry.auth.AuthContext;
 import com.ld.poetry.entity.User;
 import com.ld.poetry.enums.PermissionCode;
-import com.ld.poetry.service.UserMappingService;
+import com.ld.poetry.auth.SimpleAuthHelper;
+import com.ld.poetry.service.UserCacheService;
 import com.ld.poetry.utils.JwtUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
@@ -23,7 +24,10 @@ public class AuthTestController {
     private JwtUtil jwtUtil;
 
     @Autowired
-    private UserMappingService userMappingService;
+    private UserCacheService userCacheService;
+
+    @Autowired
+    private SimpleAuthHelper simpleAuthHelper;
 
     /**
      * 获取当前用户信息
@@ -98,14 +102,13 @@ public class AuthTestController {
             result.put("tokenInfo", tokenInfo);
 
             // 2. 用户映射测试
-            User localUser = userMappingService.getOrCreateLocalUser(token);
-            if (localUser != null) {
+            UserCacheService.CachedUserInfo cachedUser = userCacheService.getOrCreateUserMapping(token);
+            if (cachedUser.exists) {
                 Map<String, Object> mappingInfo = new HashMap<>();
-                mappingInfo.put("localUserId", localUser.getId());
-                mappingInfo.put("localUsername", localUser.getUsername());
-                mappingInfo.put("localEmail", localUser.getEmail());
-                mappingInfo.put("localUserType", localUser.getUserType());
-                mappingInfo.put("isNewUser", localUser.getCreateTime() != null);
+                mappingInfo.put("localUserId", cachedUser.localUserId);
+                mappingInfo.put("localUsername", cachedUser.username);
+                mappingInfo.put("localEmail", cachedUser.email);
+                mappingInfo.put("localUserType", cachedUser.userType);
                 result.put("mappingInfo", mappingInfo);
                 result.put("success", true);
                 result.put("message", "认证中心token解析和用户映射成功");
@@ -118,6 +121,49 @@ public class AuthTestController {
             result.put("success", false);
             result.put("error", e.getMessage());
             result.put("message", "认证中心token处理失败: " + e.getMessage());
+        }
+        
+        return result;
+    }
+
+    /**
+     * Cookie Token测试接口 - 测试从Cookie中提取sso_access_token
+     */
+    @GetMapping("/cookie-test")
+    public Map<String, Object> cookieTokenTest() {
+        Map<String, Object> result = new HashMap<>();
+        
+        try {
+            // 使用SimpleAuthHelper直接从请求中解析用户信息（包括Cookie）
+            AuthContext.UserInfo userInfo = simpleAuthHelper.parseUserFromRequest();
+            
+            if (userInfo != null) {
+                result.put("success", true);
+                result.put("source", "Cookie中的sso_access_token");
+                result.put("userId", userInfo.getUserId());
+                result.put("username", userInfo.getUsername());
+                result.put("email", userInfo.getEmail());
+                result.put("userType", userInfo.getUserType());
+                result.put("isAdmin", userInfo.isAdmin());
+                result.put("isSuperAdmin", userInfo.isSuperAdmin());
+                result.put("message", "从Cookie成功解析用户信息");
+                
+                // 权限测试
+                Map<String, Object> permissions = new HashMap<>();
+                permissions.put("LOGIN_REQUIRED", true);
+                permissions.put("USER_ADMIN", userInfo.isAdmin());
+                permissions.put("SUPER_ADMIN", userInfo.isSuperAdmin());
+                result.put("permissions", permissions);
+                
+            } else {
+                result.put("success", false);
+                result.put("message", "未找到有效的token（Authorization header或Cookie中的sso_access_token）");
+            }
+            
+        } catch (Exception e) {
+            result.put("success", false);
+            result.put("error", e.getMessage());
+            result.put("message", "Cookie token解析失败: " + e.getMessage());
         }
         
         return result;
