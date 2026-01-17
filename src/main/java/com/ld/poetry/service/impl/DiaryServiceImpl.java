@@ -9,14 +9,11 @@ import com.baomidou.mybatisplus.extension.conditions.query.LambdaQueryChainWrapp
 import com.baomidou.mybatisplus.extension.conditions.update.LambdaUpdateChainWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.ld.poetry.config.PoetryResult;
-import com.ld.poetry.entity.Label;
 import com.ld.poetry.entity.Sort;
-import com.ld.poetry.entity.User;
 import com.ld.poetry.utils.*;
+import com.ld.poetry.utils.VoBuilderUtil;
 import com.ld.poetry.vo.ArticleVO;
 import com.ld.poetry.vo.BaseRequestVO;
-
-import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
@@ -69,11 +66,7 @@ public class DiaryServiceImpl extends ServiceImpl<DiaryMapper, Diary> implements
         article.setLabelId(articleVO.getLabelId());
         article.setUserId(PoetryUtil.getUserId());
         save(article);
-
-        List<Sort> sortInfo = commonQuery.getSortInfo();
-        if (!CollectionUtils.isEmpty(sortInfo)) {
-            PoetryCache.put(CommonConst.SORT_INFO, sortInfo);
-        }
+        refreshSortInfoCache();
         return PoetryResult.success();
     }
 
@@ -83,10 +76,7 @@ public class DiaryServiceImpl extends ServiceImpl<DiaryMapper, Diary> implements
         lambdaUpdate().eq(Diary::getId, id)
                 .eq(Diary::getUserId, userId)
                 .remove();
-        List<Sort> sortInfo = commonQuery.getSortInfo();
-        if (!CollectionUtils.isEmpty(sortInfo)) {
-            PoetryCache.put(CommonConst.SORT_INFO, sortInfo);
-        }
+        refreshSortInfoCache();
         return PoetryResult.success();
     }
 
@@ -124,10 +114,7 @@ public class DiaryServiceImpl extends ServiceImpl<DiaryMapper, Diary> implements
             updateChainWrapper.set(Diary::getViewStatus, articleVO.getViewStatus());
         }
         updateChainWrapper.update();
-        List<Sort> sortInfo = commonQuery.getSortInfo();
-        if (!CollectionUtils.isEmpty(sortInfo)) {
-            PoetryCache.put(CommonConst.SORT_INFO, sortInfo);
-        }
+        refreshSortInfoCache();
         return PoetryResult.success();
     }
 
@@ -220,50 +207,21 @@ public class DiaryServiceImpl extends ServiceImpl<DiaryMapper, Diary> implements
         return PoetryResult.success(articleVO);
     }
 
+    /**
+     * 构建 ArticleVO（扁平化、低耦合）
+     */
     private ArticleVO buildArticleVO(Diary article, Boolean isAdmin) {
-        ArticleVO articleVO = new ArticleVO();
-        BeanUtils.copyProperties(article, articleVO);
-        if (!isAdmin) {
-            if (!StringUtils.hasText(articleVO.getArticleCover())) {
-                articleVO.setArticleCover(PoetryUtil.getRandomCover(articleVO.getId().toString()));
-            }
+        Integer userId = PoetryUtil.getUserId();
+        return VoBuilderUtil.buildArticleVO(article, isAdmin, userId, commonQuery);
+    }
+    
+    /**
+     * 刷新分类信息缓存（扁平化、低耦合）
+     */
+    private void refreshSortInfoCache() {
+        List<Sort> sortInfo = commonQuery.getSortInfo();
+        if (!CollectionUtils.isEmpty(sortInfo)) {
+            PoetryCache.put(CommonConst.SORT_INFO, sortInfo);
         }
-
-        User user = commonQuery.getUser(articleVO.getUserId());
-        if (user != null && StringUtils.hasText(user.getUsername())) {
-            articleVO.setUsername(user.getUsername());
-        } else if (!isAdmin) {
-            articleVO.setUsername(PoetryUtil.getRandomName(articleVO.getUserId().toString()));
-        }
-        if (articleVO.getCommentStatus()) {
-            articleVO.setCommentCount(commonQuery.getCommentCount(articleVO.getId()));
-        } else {
-            articleVO.setCommentCount(0);
-        }
-
-        List<Sort> sortInfo = (List<Sort>) PoetryCache.get(CommonConst.SORT_INFO);
-        if (sortInfo != null) {
-            for (Sort s : sortInfo) {
-                if (s.getId().intValue() == articleVO.getSortId().intValue()) {
-                    Sort sort = new Sort();
-                    BeanUtils.copyProperties(s, sort);
-                    sort.setLabels(null);
-                    articleVO.setSort(sort);
-                    if (!CollectionUtils.isEmpty(s.getLabels())) {
-                        for (int j = 0; j < s.getLabels().size(); j++) {
-                            Label l = s.getLabels().get(j);
-                            if (l.getId().intValue() == articleVO.getLabelId().intValue()) {
-                                Label label = new Label();
-                                BeanUtils.copyProperties(l, label);
-                                articleVO.setLabel(label);
-                                break;
-                            }
-                        }
-                    }
-                    break;
-                }
-            }
-        }
-        return articleVO;
     }
 }

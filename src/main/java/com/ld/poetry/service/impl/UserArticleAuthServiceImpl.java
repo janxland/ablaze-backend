@@ -22,10 +22,12 @@ import java.nio.charset.StandardCharsets;
 import java.util.StringJoiner;
 import java.util.stream.Collectors;
 
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 @Service
+@Slf4j
 public class UserArticleAuthServiceImpl
         extends ServiceImpl<UserArticleAuthMapper, UserArticleAuth>
         implements UserArticleAuthService {
@@ -41,7 +43,7 @@ public class UserArticleAuthServiceImpl
         if (url == null || url.isEmpty()) {
             
         }
-        System.out.println("Using URL: " + url);
+        log.debug("使用支付API URL: {}", url);
         String params = "systemId=1&userId=" + PoetryUtil.getUserId()  + 
                         "&productCode=" + paymentNotifyDTO.getProductCode() +
                         "&amount=" + 5 +
@@ -67,7 +69,7 @@ public class UserArticleAuthServiceImpl
                 return response.toString();
             }
         } catch (IOException e) {
-            System.out.println(e);
+            log.error("创建订单失败，服务器请求异常", e);
             throw new RuntimeException("Order creation failed, server request exception", e);
         }
     }
@@ -90,7 +92,7 @@ public class UserArticleAuthServiceImpl
                             URLEncoder.encode(value.toString(), "UTF-8"));
                 }
             }
-            System.out.println("query = " + query);
+            log.debug("查询订单参数: {}", query);
             HttpURLConnection conn = (HttpURLConnection) new URL(PAY_STATUS_API_URL + "?" + query).openConnection();
             try (InputStream is = conn.getInputStream();
                 BufferedReader br = new BufferedReader(new InputStreamReader(is))) {
@@ -102,15 +104,15 @@ public class UserArticleAuthServiceImpl
                     auth.setArticleId(Integer.valueOf(dto.getProductCode()));
                     auth.setPay(1); // 标记为已支付
                     this.createOrUpdate(auth);
-                    System.out.println("SUCCESS");
+                    log.info("订单支付成功，用户ID: {}, 文章ID: {}", PoetryUtil.getUserId(), dto.getProductCode());
                 }
                 return res.toJSONString();
             } catch (Exception e) {
-                System.out.println(e);
+                log.error("查询订单状态异常", e);
                 return e.getMessage();
             }
         } catch (Exception e) {
-            // TODO: handle exception
+            log.error("查询订单状态失败", e);
             return e.getMessage();
         }
     }

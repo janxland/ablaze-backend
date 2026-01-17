@@ -44,7 +44,6 @@ public class TodolistController {
     @RequirePermission(PermissionCode.USER_ADMIN)
     @PostMapping("/saveTask")
     public PoetryResult saveTask(@Validated @RequestBody Todolist todolistVO) {
-        // PoetryCache.remove(CommonConst.USER_ARTICLE_LIST + PoetryUtil.getUserId().toString());
         return todolistService.saveTask(todolistVO);
     }
 

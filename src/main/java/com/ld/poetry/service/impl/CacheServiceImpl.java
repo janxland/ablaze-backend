@@ -43,7 +43,7 @@ public class CacheServiceImpl implements CacheService {
     @Override
     public void warmUp() {
         log.info("开始缓存预热...");
-        // TODO: 实现缓存预热逻辑
+        // 缓存预热逻辑待实现
         // 1. 加载热点文章
         // 2. 加载热门用户
         // 3. 加载系统配置

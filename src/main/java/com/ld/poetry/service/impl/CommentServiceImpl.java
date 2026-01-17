@@ -9,15 +9,14 @@ import com.ld.poetry.dao.ArticleMapper;
 import com.ld.poetry.dao.CommentMapper;
 import com.ld.poetry.entity.Article;
 import com.ld.poetry.entity.Comment;
-import com.ld.poetry.entity.User;
 import com.ld.poetry.entity.UserArticleAuth;
 import com.ld.poetry.service.CommentService;
 import com.ld.poetry.service.UserArticleAuthService;
 import com.ld.poetry.utils.*;
+import com.ld.poetry.utils.VoBuilderUtil;
 import com.ld.poetry.vo.BaseRequestVO;
 import com.ld.poetry.vo.CommentVO;
-
-import org.springframework.beans.BeanUtils;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
@@ -39,6 +38,7 @@ import java.util.stream.Collectors;
  * @since 2021-08-13
  */
 @Service
+@Slf4j
 public class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment> implements CommentService {
 
     @Autowired
@@ -91,7 +91,7 @@ public class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment> impl
             auth.setReply(1);
             userArticleAuthService.createOrUpdate(auth);
         } catch (Exception e) {
-            System.out.println(e);
+            log.error("创建或更新用户文章权限失败", e);
         }
 
         return PoetryResult.success();
@@ -99,7 +99,12 @@ public class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment> impl
 
     @Override
     public PoetryResult deleteComment(Integer id) {
+        // 扁平化处理：提前返回，减少嵌套
         Integer userId = PoetryUtil.getUserId();
+        if (userId == null) {
+            return PoetryResult.fail("用户未登录");
+        }
+        
         lambdaUpdate().eq(Comment::getId, id)
                 .eq(Comment::getUserId, userId)
                 .remove();
@@ -108,131 +113,211 @@ public class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment> impl
 
     @Override
     public PoetryResult<BaseRequestVO> listComment(BaseRequestVO baseRequestVO) {
+        // 扁平化处理：参数校验提前返回
         if (baseRequestVO.getSource() == null) {
             return PoetryResult.fail(CodeMsg.PARAMETER_ERROR);
         }
-        LambdaQueryChainWrapper<Article> articleWrapper = new LambdaQueryChainWrapper<>(articleMapper);
-        Article one = articleWrapper.eq(Article::getId, baseRequestVO.getSource()).select(Article::getCommentStatus).one();
-
-        if (one != null && !one.getCommentStatus()) {
+        
+        // 扁平化处理：评论状态检查提前返回
+        if (!checkCommentStatus(baseRequestVO.getSource())) {
             return PoetryResult.fail("评论功能已关闭！");
         }
 
+        // 扁平化处理：根据是否有 floorCommentId 分别处理
         if (baseRequestVO.getFloorCommentId() == null) {
-            // 查询一级评论
-            lambdaQuery().eq(Comment::getSource, baseRequestVO.getSource()).eq(Comment::getParentCommentId, CommonConst.FIRST_COMMENT).orderByAsc(Comment::getCreateTime).page((Page)baseRequestVO);
-            List<Comment> comments = baseRequestVO.getRecords();
-            if (CollectionUtils.isEmpty(comments)) {
-                return PoetryResult.success(baseRequestVO);
-            }
-            
-            // 内存优化：批量查询所有子评论，避免N+1查询问题
-            List<Integer> parentIds = comments.stream().map(Comment::getId).collect(Collectors.toList());
-            Map<Integer, List<Comment>> childCommentsMap = new HashMap<>();
-            if (!parentIds.isEmpty()) {
-                // 批量查询所有子评论（最多5条）
-                List<Comment> allChildComments = lambdaQuery()
-                    .eq(Comment::getSource, baseRequestVO.getSource())
-                    .in(Comment::getFloorCommentId, parentIds)
-                    .orderByAsc(Comment::getCreateTime)
-                    .list();
-                
-                // 按父评论ID分组，并限制每个父评论最多5条子评论
-                Map<Integer, List<Comment>> tempMap = allChildComments.stream()
-                    .collect(Collectors.groupingBy(Comment::getFloorCommentId));
-                
-                tempMap.forEach((parentId, childList) -> {
-                    // 限制每个父评论最多5条子评论
-                    List<Comment> limitedList = childList.stream()
-                        .limit(5)
-                        .collect(Collectors.toList());
-                    childCommentsMap.put(parentId, limitedList);
-                });
-            }
-            
-            // 构建评论VO，使用预查询的子评论数据
-            final Map<Integer, List<Comment>> finalChildMap = childCommentsMap;
-            List<CommentVO> commentVOs = comments.stream().map(c -> {
-                CommentVO commentVO = buildCommentVO(c);
-                List<Comment> childComments = finalChildMap.getOrDefault(c.getId(), Collections.emptyList());
-                if (!childComments.isEmpty()) {
-                    List<CommentVO> ccVO = childComments.stream()
-                        .map(cc -> buildCommentVO(cc))
-                        .collect(Collectors.toList());
-                    Page page = new Page(1, 5);
-                    page.setRecords(ccVO);
-                    page.setTotal(childComments.size());
-                    commentVO.setChildComments(page);
-                }
-                return commentVO;
-            }).collect(Collectors.toList());
-            baseRequestVO.setRecords(commentVOs);
+            return listTopLevelComments(baseRequestVO);
         } else {
-                IPage result = page(new Page<>(baseRequestVO.getCurrent(),baseRequestVO.getSize()),lambdaQuery().getWrapper());
-            lambdaQuery().eq(Comment::getSource, baseRequestVO.getSource()).eq(Comment::getFloorCommentId, baseRequestVO.getFloorCommentId()).orderByAsc(Comment::getCreateTime).page(result);
-            List<Comment> childComments = baseRequestVO.getRecords();
-            if (CollectionUtils.isEmpty(childComments)) {
-                return PoetryResult.success(baseRequestVO);
-            }
-            List<CommentVO> ccVO = childComments.stream().map(cc -> buildCommentVO(cc)).collect(Collectors.toList());
-            baseRequestVO.setRecords(ccVO);
+            return listChildComments(baseRequestVO);
         }
+    }
+    
+    /**
+     * 检查评论状态（扁平化、低耦合）
+     */
+    private boolean checkCommentStatus(Integer source) {
+        LambdaQueryChainWrapper<Article> articleWrapper = new LambdaQueryChainWrapper<>(articleMapper);
+        Article article = articleWrapper.eq(Article::getId, source)
+                .select(Article::getCommentStatus)
+                .one();
+        return article == null || article.getCommentStatus();
+    }
+    
+    /**
+     * 查询一级评论（扁平化、低耦合）
+     */
+    private PoetryResult<BaseRequestVO> listTopLevelComments(BaseRequestVO baseRequestVO) {
+        // 查询一级评论
+        lambdaQuery()
+                .eq(Comment::getSource, baseRequestVO.getSource())
+                .eq(Comment::getParentCommentId, CommonConst.FIRST_COMMENT)
+                .orderByAsc(Comment::getCreateTime)
+                .page((Page) baseRequestVO);
+        
+        List<Comment> comments = baseRequestVO.getRecords();
+        if (CollectionUtils.isEmpty(comments)) {
+            return PoetryResult.success(baseRequestVO);
+        }
+        
+        // 扁平化处理：批量查询子评论
+        Map<Integer, List<Comment>> childCommentsMap = batchQueryChildComments(baseRequestVO.getSource(), comments);
+        
+        // 扁平化处理：构建评论VO
+        List<CommentVO> commentVOs = buildCommentVOsWithChildren(comments, childCommentsMap);
+        baseRequestVO.setRecords(commentVOs);
+        
+        return PoetryResult.success(baseRequestVO);
+    }
+    
+    /**
+     * 批量查询子评论（扁平化、低耦合）
+     */
+    private Map<Integer, List<Comment>> batchQueryChildComments(Integer source, List<Comment> parentComments) {
+        List<Integer> parentIds = parentComments.stream()
+                .map(Comment::getId)
+                .collect(Collectors.toList());
+        
+        if (CollectionUtils.isEmpty(parentIds)) {
+            return new HashMap<>();
+        }
+        
+        // 批量查询所有子评论
+        List<Comment> allChildComments = lambdaQuery()
+                .eq(Comment::getSource, source)
+                .in(Comment::getFloorCommentId, parentIds)
+                .orderByAsc(Comment::getCreateTime)
+                .list();
+        
+        // 按父评论ID分组，并限制每个父评论最多5条子评论
+        return allChildComments.stream()
+                .collect(Collectors.groupingBy(Comment::getFloorCommentId))
+                .entrySet().stream()
+                .collect(Collectors.toMap(
+                        Map.Entry::getKey,
+                        entry -> entry.getValue().stream()
+                                .limit(5)
+                                .collect(Collectors.toList())
+                ));
+    }
+    
+    /**
+     * 构建评论VO（带子评论）（扁平化、低耦合）
+     */
+    private List<CommentVO> buildCommentVOsWithChildren(List<Comment> comments, Map<Integer, List<Comment>> childCommentsMap) {
+        return comments.stream().map(parentComment -> {
+            CommentVO commentVO = VoBuilderUtil.buildCommentVO(parentComment, commonQuery);
+            
+            List<Comment> childComments = childCommentsMap.getOrDefault(parentComment.getId(), Collections.emptyList());
+            if (!CollectionUtils.isEmpty(childComments)) {
+                List<CommentVO> childCommentVOs = childComments.stream()
+                        .map(childComment -> VoBuilderUtil.buildCommentVO(childComment, commonQuery))
+                        .collect(Collectors.toList());
+                
+                Page<CommentVO> childPage = new Page<>(1, 5);
+                childPage.setRecords(childCommentVOs);
+                childPage.setTotal(childComments.size());
+                commentVO.setChildComments(childPage);
+            }
+            
+            return commentVO;
+        }).collect(Collectors.toList());
+    }
+    
+    /**
+     * 查询子评论（扁平化、低耦合）
+     */
+    private PoetryResult<BaseRequestVO> listChildComments(BaseRequestVO baseRequestVO) {
+        IPage<Comment> result = page(
+                new Page<>(baseRequestVO.getCurrent(), baseRequestVO.getSize()),
+                lambdaQuery()
+                        .eq(Comment::getSource, baseRequestVO.getSource())
+                        .eq(Comment::getFloorCommentId, baseRequestVO.getFloorCommentId())
+                        .orderByAsc(Comment::getCreateTime)
+                        .getWrapper()
+        );
+        
+        List<Comment> childComments = result.getRecords();
+        if (CollectionUtils.isEmpty(childComments)) {
+            return PoetryResult.success(baseRequestVO);
+        }
+        
+        List<CommentVO> childCommentVOs = childComments.stream()
+                .map(comment -> VoBuilderUtil.buildCommentVO(comment, commonQuery))
+                .collect(Collectors.toList());
+        baseRequestVO.setRecords(childCommentVOs);
+        
         return PoetryResult.success(baseRequestVO);
     }
 
     @Override
     public PoetryResult<Page> listAdminComment(BaseRequestVO baseRequestVO, Boolean isBoss) {
-        LambdaQueryChainWrapper<Comment> wrapper = lambdaQuery();
+        // 扁平化处理：根据 isBoss 分别处理
         if (isBoss) {
-            if (baseRequestVO.getSource() != null) {
-                wrapper.eq(Comment::getSource, baseRequestVO.getSource());
-            }
-            IPage result = page(new Page<>(baseRequestVO.getCurrent(),baseRequestVO.getSize()),wrapper.getWrapper());
-            wrapper.orderByDesc(Comment::getCreateTime).page(result);
+            return listAdminCommentForBoss(baseRequestVO);
         } else {
-            List<Integer> userArticleIds = commonQuery.getUserArticleIds(PoetryUtil.getUserId());
-            if (CollectionUtils.isEmpty(userArticleIds) ||
-                    (!CollectionUtils.isEmpty(userArticleIds) &&
-                            baseRequestVO.getSource() != null &&
-                            !userArticleIds.contains(baseRequestVO.getSource()))) {
-                baseRequestVO.setTotal(0);
-                baseRequestVO.setRecords(new ArrayList());
-            } else {
-                if (baseRequestVO.getSource() != null) {
-                    wrapper.eq(Comment::getSource, baseRequestVO.getSource());
-                } else {
-                    wrapper.in(Comment::getSource, userArticleIds);
-                }
-                    IPage result = page(new Page<>(baseRequestVO.getCurrent(),baseRequestVO.getSize()),wrapper.getWrapper());
-                wrapper.orderByDesc(Comment::getCreateTime).page(result);
-            }
+            return listAdminCommentForUser(baseRequestVO);
         }
+    }
+    
+    /**
+     * 管理员查询评论（扁平化、低耦合）
+     */
+    private PoetryResult<Page> listAdminCommentForBoss(BaseRequestVO baseRequestVO) {
+        LambdaQueryChainWrapper<Comment> wrapper = lambdaQuery();
+        
+        if (baseRequestVO.getSource() != null) {
+            wrapper.eq(Comment::getSource, baseRequestVO.getSource());
+        }
+        
+        IPage<Comment> result = page(
+                new Page<>(baseRequestVO.getCurrent(), baseRequestVO.getSize()),
+                wrapper.getWrapper()
+        );
+        wrapper.orderByDesc(Comment::getCreateTime).page(result);
+        
         return PoetryResult.success(baseRequestVO);
     }
-
-    private CommentVO buildCommentVO(Comment c) {
-        CommentVO commentVO = new CommentVO();
-        BeanUtils.copyProperties(c, commentVO);
-
-        User user = commonQuery.getUser(commentVO.getUserId());
-        if (user != null) {
-            commentVO.setAvatar(user.getAvatar());
-            commentVO.setUsername(user.getUsername());
+    
+    /**
+     * 普通用户查询评论（扁平化、低耦合）
+     */
+    private PoetryResult<Page> listAdminCommentForUser(BaseRequestVO baseRequestVO) {
+        List<Integer> userArticleIds = commonQuery.getUserArticleIds(PoetryUtil.getUserId());
+        
+        // 扁平化处理：权限检查提前返回
+        if (!hasCommentPermission(userArticleIds, baseRequestVO.getSource())) {
+            baseRequestVO.setTotal(0);
+            baseRequestVO.setRecords(new ArrayList<>());
+            return PoetryResult.success(baseRequestVO);
         }
-
-        if (!StringUtils.hasText(commentVO.getUsername())) {
-            commentVO.setUsername(PoetryUtil.getRandomName(commentVO.getUserId().toString()));
+        
+        LambdaQueryChainWrapper<Comment> wrapper = lambdaQuery();
+        if (baseRequestVO.getSource() != null) {
+            wrapper.eq(Comment::getSource, baseRequestVO.getSource());
+        } else {
+            wrapper.in(Comment::getSource, userArticleIds);
         }
-
-        if (commentVO.getParentUserId() != null) {
-            User u = commonQuery.getUser(commentVO.getParentUserId());
-            if (u != null) {
-                commentVO.setParentUsername(u.getUsername());
-            }
-            if (!StringUtils.hasText(commentVO.getParentUsername())) {
-                commentVO.setParentUsername(PoetryUtil.getRandomName(commentVO.getParentUserId().toString()));
-            }
+        
+        IPage<Comment> result = page(
+                new Page<>(baseRequestVO.getCurrent(), baseRequestVO.getSize()),
+                wrapper.getWrapper()
+        );
+        wrapper.orderByDesc(Comment::getCreateTime).page(result);
+        
+        return PoetryResult.success(baseRequestVO);
+    }
+    
+    /**
+     * 检查评论权限（扁平化、低耦合）
+     */
+    private boolean hasCommentPermission(List<Integer> userArticleIds, Integer source) {
+        if (CollectionUtils.isEmpty(userArticleIds)) {
+            return false;
         }
-        return commentVO;
+        
+        if (source != null && !userArticleIds.contains(source)) {
+            return false;
+        }
+        
+        return true;
     }
 }

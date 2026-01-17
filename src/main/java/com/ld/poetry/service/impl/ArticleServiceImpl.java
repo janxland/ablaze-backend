@@ -8,13 +8,12 @@ import com.ld.poetry.config.PoetryResult;
 import com.ld.poetry.dao.ArticleMapper;
 import com.ld.poetry.dao.DiaryMapper;
 import com.ld.poetry.entity.Article;
-import com.ld.poetry.entity.Label;
 import com.ld.poetry.entity.Sort;
-import com.ld.poetry.entity.User;
 import com.ld.poetry.entity.UserArticleAuth;
 import com.ld.poetry.service.ArticleService;
 import com.ld.poetry.service.UserArticleAuthService;
 import com.ld.poetry.utils.*;
+import com.ld.poetry.utils.VoBuilderUtil;
 import com.ld.poetry.vo.ArticleVO;
 import com.ld.poetry.vo.BaseRequestVO;
 
@@ -54,16 +53,43 @@ public class ArticleServiceImpl extends ServiceImpl<ArticleMapper, Article> impl
 
     @Override
     public PoetryResult saveArticle(ArticleVO articleVO) {
-        if (articleVO.getViewStatus() != null && !articleVO.getViewStatus() && !StringUtils.hasText(articleVO.getPassword())) {
+        // 扁平化处理：参数校验提前返回
+        if (!validateArticlePassword(articleVO)) {
             return PoetryResult.fail("请设置文章密码！");
         }
+        
+        Article article = buildArticleFromVO(articleVO);
+        save(article);
+        refreshSortInfoCache();
+        
+        return PoetryResult.success();
+    }
+    
+    /**
+     * 验证文章密码（扁平化、低耦合）
+     */
+    private boolean validateArticlePassword(ArticleVO articleVO) {
+        if (articleVO.getViewStatus() != null && !articleVO.getViewStatus() && !StringUtils.hasText(articleVO.getPassword())) {
+            return false;
+        }
+        return true;
+    }
+    
+    /**
+     * 从VO构建Article实体（扁平化、低耦合）
+     */
+    private Article buildArticleFromVO(ArticleVO articleVO) {
         Article article = new Article();
+        
+        // 扁平化处理：分别设置各个属性
         if (StringUtils.hasText(articleVO.getArticleCover())) {
             article.setArticleCover(articleVO.getArticleCover());
         }
+        
         if (articleVO.getViewStatus() != null && !articleVO.getViewStatus() && StringUtils.hasText(articleVO.getPassword())) {
             article.setPassword(articleVO.getPassword());
         }
+        
         article.setViewStatus(articleVO.getViewStatus());
         article.setCommentStatus(articleVO.getCommentStatus());
         article.setRecommendStatus(articleVO.getRecommendStatus());
@@ -72,13 +98,8 @@ public class ArticleServiceImpl extends ServiceImpl<ArticleMapper, Article> impl
         article.setSortId(articleVO.getSortId());
         article.setLabelId(articleVO.getLabelId());
         article.setUserId(PoetryUtil.getUserId());
-        save(article);
-
-        List<Sort> sortInfo = commonQuery.getSortInfo();
-        if (!CollectionUtils.isEmpty(sortInfo)) {
-            PoetryCache.put(CommonConst.SORT_INFO, sortInfo);
-        }
-        return PoetryResult.success();
+        
+        return article;
     }
 
     @Override
@@ -87,10 +108,8 @@ public class ArticleServiceImpl extends ServiceImpl<ArticleMapper, Article> impl
         lambdaUpdate().eq(Article::getId, id)
                 .eq(Article::getUserId, userId)
                 .remove();
-        List<Sort> sortInfo = commonQuery.getSortInfo();
-        if (!CollectionUtils.isEmpty(sortInfo)) {
-            PoetryCache.put(CommonConst.SORT_INFO, sortInfo);
-        }
+        
+        refreshSortInfoCache();
         return PoetryResult.success();
     }
 
@@ -130,10 +149,7 @@ public class ArticleServiceImpl extends ServiceImpl<ArticleMapper, Article> impl
             updateChainWrapper.set(Article::getViewStatus, articleVO.getViewStatus());
         }
         updateChainWrapper.update();
-        List<Sort> sortInfo = commonQuery.getSortInfo();
-        if (!CollectionUtils.isEmpty(sortInfo)) {
-            PoetryCache.put(CommonConst.SORT_INFO, sortInfo);
-        }
+        refreshSortInfoCache();
         return PoetryResult.success();
     }
 
@@ -416,50 +432,21 @@ public class ArticleServiceImpl extends ServiceImpl<ArticleMapper, Article> impl
         return PoetryResult.success(articleVO);
     }
 
+    /**
+     * 构建 ArticleVO（扁平化、低耦合）
+     */
     private ArticleVO buildArticleVO(Article article, Boolean isAdmin) {
-        ArticleVO articleVO = new ArticleVO();
-        BeanUtils.copyProperties(article, articleVO);
-        if (!isAdmin) {
-            if (!StringUtils.hasText(articleVO.getArticleCover())) {
-                articleVO.setArticleCover(PoetryUtil.getRandomCover(articleVO.getId().toString()));
-            }
+        Integer userId = PoetryUtil.getUserId();
+        return VoBuilderUtil.buildArticleVO(article, isAdmin, userId, commonQuery);
+    }
+    
+    /**
+     * 刷新分类信息缓存（扁平化、低耦合）
+     */
+    private void refreshSortInfoCache() {
+        List<Sort> sortInfo = commonQuery.getSortInfo();
+        if (!CollectionUtils.isEmpty(sortInfo)) {
+            PoetryCache.put(CommonConst.SORT_INFO, sortInfo);
         }
-
-        User user = commonQuery.getUser(articleVO.getUserId());
-        if (user != null && StringUtils.hasText(user.getUsername())) {
-            articleVO.setUsername(user.getUsername());
-        } else if (!isAdmin) {
-            articleVO.setUsername(PoetryUtil.getRandomName(articleVO.getUserId().toString()));
-        }
-        if (articleVO.getCommentStatus()) {
-            articleVO.setCommentCount(commonQuery.getCommentCount(articleVO.getId()));
-        } else {
-            articleVO.setCommentCount(0);
-        }
-
-        List<Sort> sortInfo = (List<Sort>) PoetryCache.get(CommonConst.SORT_INFO);
-        if (sortInfo != null) {
-            for (Sort s : sortInfo) {
-                if (s.getId().intValue() == articleVO.getSortId().intValue()) {
-                    Sort sort = new Sort();
-                    BeanUtils.copyProperties(s, sort);
-                    sort.setLabels(null);
-                    articleVO.setSort(sort);
-                    if (!CollectionUtils.isEmpty(s.getLabels())) {
-                        for (int j = 0; j < s.getLabels().size(); j++) {
-                            Label l = s.getLabels().get(j);
-                            if (l.getId().intValue() == articleVO.getLabelId().intValue()) {
-                                Label label = new Label();
-                                BeanUtils.copyProperties(l, label);
-                                articleVO.setLabel(label);
-                                break;
-                            }
-                        }
-                    }
-                    break;
-                }
-            }
-        }
-        return articleVO;
     }
 }
