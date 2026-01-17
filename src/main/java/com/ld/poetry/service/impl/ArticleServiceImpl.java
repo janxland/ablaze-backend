@@ -9,6 +9,7 @@ import com.ld.poetry.dao.ArticleMapper;
 import com.ld.poetry.dao.DiaryMapper;
 import com.ld.poetry.entity.Article;
 import com.ld.poetry.entity.Sort;
+import com.ld.poetry.entity.User;
 import com.ld.poetry.entity.UserArticleAuth;
 import com.ld.poetry.service.ArticleService;
 import com.ld.poetry.service.UserArticleAuthService;
@@ -328,12 +329,13 @@ public class ArticleServiceImpl extends ServiceImpl<ArticleMapper, Article> impl
         }
 
         // 2) 判断当前用户是否为管理员
-        //    （需要你在 PoetryUtil.getCurrentUser() 返回的对象里有 userType 字段）
         Integer currentUserId = PoetryUtil.getUserId();
         boolean isAdmin = false;
-        if (currentUserId != null && PoetryUtil.getCurrentUser() != null) {
-            Integer userType = PoetryUtil.getCurrentUser().getUserType();
-            if (userType != null && userType.equals(PoetryEnum.USER_TYPE_ADMIN.getCode())) {
+        if (currentUserId != null) {
+            // 通过CommonQuery获取用户信息（带缓存）
+            User currentUser = commonQuery.getUser(currentUserId);
+            if (currentUser != null && currentUser.getUserType() != null 
+                    && currentUser.getUserType().equals(PoetryEnum.USER_TYPE_ADMIN.getCode())) {
                 isAdmin = true;
             }
         }

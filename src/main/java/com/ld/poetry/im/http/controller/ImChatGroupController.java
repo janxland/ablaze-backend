@@ -18,6 +18,7 @@ import com.ld.poetry.im.http.vo.GroupVO;
 import com.ld.poetry.im.websocket.ImConfigConst;
 import com.ld.poetry.im.websocket.TioWebsocketStarter;
 import com.ld.poetry.utils.CodeMsg;
+import com.ld.poetry.utils.CommonQuery;
 import com.ld.poetry.utils.PoetryEnum;
 import com.ld.poetry.utils.PoetryUtil;
 import com.ld.poetry.vo.BaseRequestVO;
@@ -57,6 +58,9 @@ public class ImChatGroupController {
 
     @Autowired
     private ImChatUserGroupMessageService imChatUserGroupMessageService;
+
+    @Autowired
+    private CommonQuery commonQuery;
 
     /**
      * 创建群组
@@ -148,9 +152,14 @@ public class ImChatGroupController {
     @GetMapping("/deleteGroup")
     @RequirePermission(PermissionCode.LOGIN_REQUIRED)
     public PoetryResult deleteGroup(@RequestParam("id") Integer id) {
-        User currentUser = PoetryUtil.getCurrentUser();
+        Integer userId = PoetryUtil.getUserId();
+        if (userId == null) {
+            return PoetryResult.fail("用户未登录！");
+        }
+        User currentUser = commonQuery.getUser(userId);
         boolean isSuccess;
-        if (currentUser.getUserType().intValue() == PoetryEnum.USER_TYPE_ADMIN.getCode()) {
+        if (currentUser != null && currentUser.getUserType() != null 
+                && currentUser.getUserType().intValue() == PoetryEnum.USER_TYPE_ADMIN.getCode()) {
             isSuccess = imChatGroupService.removeById(id);
         } else {
             LambdaUpdateChainWrapper<ImChatGroup> lambdaUpdate = imChatGroupService.lambdaUpdate();

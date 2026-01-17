@@ -1,6 +1,5 @@
 package com.ld.poetry.utils;
 
-import com.ld.poetry.utils.JsonUtil;
 import com.ld.poetry.entity.User;
 import com.ld.poetry.entity.WebInfo;
 import com.ld.poetry.handle.PoetryRuntimeException;
@@ -34,12 +33,6 @@ public class PoetryUtil {
             token = token.substring(7);
         }
         return token;
-    }
-
-    public static User getCurrentUser() {
-        // 注意：这个方法现在返回null，因为我们不再从缓存获取完整用户对象
-        // 如果需要完整用户信息，应该通过用户ID查询数据库
-        return null;
     }
 
     public static User getAdminUser() {

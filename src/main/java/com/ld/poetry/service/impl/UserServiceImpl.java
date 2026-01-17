@@ -292,7 +292,14 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
     public PoetryResult<UserVO> updateSecretInfo(String place, Integer flag, String code, String password) {
         password = new String(AES.encrypt(password, CommonConst.CRYPOTJS_KEY));
 
-        User user = PoetryUtil.getCurrentUser();
+        Integer userId = PoetryUtil.getUserId();
+        if (userId == null) {
+            return PoetryResult.fail("用户未登录！");
+        }
+        User user = getById(userId);
+        if (user == null) {
+            return PoetryResult.fail("用户不存在！");
+        }
         if ((flag == 1 || flag == 2) && !DigestUtils.md5DigestAsHex(password.getBytes()).equals(user.getPassword())) {
             return PoetryResult.fail("密码错误！");
         }
