@@ -2,8 +2,8 @@ package com.ld.poetry.utils;
 
 import com.ld.poetry.utils.JsonUtil;
 import lombok.extern.slf4j.Slf4j;
+import com.ld.poetry.config.ApplicationProperties;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.scheduling.annotation.Async;
@@ -86,8 +86,8 @@ public class MailUtil {
     @Autowired
     private JavaMailSender mailSender;
 
-    @Value("${spring.mail.username}")
-    private String sendMailer;
+    @Autowired
+    private ApplicationProperties applicationProperties;
 
     @Async
     public void sendMailMessage(List<String> to, String subject, String text) {
@@ -99,7 +99,7 @@ public class MailUtil {
             //true代表支持复杂的类型
             MimeMessageHelper mimeMessageHelper = new MimeMessageHelper(mailSender.createMimeMessage(), true);
             //邮件发信人
-            mimeMessageHelper.setFrom(sendMailer);
+            mimeMessageHelper.setFrom(applicationProperties.getMailUsername());
             //邮件收信人1或多个
             mimeMessageHelper.setTo(to.toArray(new String[0]));
             //邮件主题

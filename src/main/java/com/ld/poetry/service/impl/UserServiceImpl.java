@@ -6,6 +6,7 @@ import com.baomidou.mybatisplus.core.toolkit.AES;
 import com.baomidou.mybatisplus.extension.conditions.query.LambdaQueryChainWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.ld.poetry.config.ApplicationProperties;
 import com.ld.poetry.config.PoetryResult;
 import com.ld.poetry.dao.UserMapper;
 import com.ld.poetry.entity.User;
@@ -27,7 +28,6 @@ import com.ld.poetry.vo.UserVO;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.DigestUtils;
@@ -69,8 +69,8 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
     @Autowired
     private MailUtil mailUtil;
 
-    @Value("${user.code.format}")
-    private String codeFormat;
+    @Autowired
+    private ApplicationProperties applicationProperties;
 
     @Override
     public PoetryResult<UserVO> login(String account, String password, Boolean isAdmin) {
@@ -483,7 +483,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
                 webName,
                 String.format(MailUtil.imMail, PoetryUtil.getAdminUser().getUsername()),
                 PoetryUtil.getAdminUser().getUsername(),
-                String.format(codeFormat, i),
+                String.format(applicationProperties.getUserCodeFormat(), i),
                 "",
                 webName);
     }

@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.ld.poetry.utils.JsonUtil;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.ld.poetry.config.ApplicationProperties;
 import com.ld.poetry.dao.UserArticleAuthMapper;
 import com.ld.poetry.entity.UserArticleAuth;
 import com.ld.poetry.service.UserArticleAuthService;
@@ -24,7 +25,7 @@ import java.util.StringJoiner;
 import java.util.stream.Collectors;
 
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.Map;
@@ -35,16 +36,13 @@ public class UserArticleAuthServiceImpl
         extends ServiceImpl<UserArticleAuthMapper, UserArticleAuth>
         implements UserArticleAuthService {
 
-    @Value("${PAY_API_URL}")
-    private String PAY_API_URL;
-
-    @Value("${PAY_STATUS_API_URL}")
-    private String PAY_STATUS_API_URL;
+    @Autowired
+    private ApplicationProperties applicationProperties;
     
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
     @Override
     public String createOrder(PaymentNotifyDTO paymentNotifyDTO) {
-        String url = PAY_API_URL;
+        String url = applicationProperties.getPaymentApiUrl();
         if (url == null || url.isEmpty()) {
             
         }
@@ -99,7 +97,7 @@ public class UserArticleAuthServiceImpl
                 }
             }
             log.debug("查询订单参数: {}", query);
-            HttpURLConnection conn = (HttpURLConnection) new URL(PAY_STATUS_API_URL + "?" + query).openConnection();
+            HttpURLConnection conn = (HttpURLConnection) new URL(applicationProperties.getPaymentStatusApiUrl() + "?" + query).openConnection();
             try (InputStream is = conn.getInputStream();
                 BufferedReader br = new BufferedReader(new InputStreamReader(is))) {
                 
