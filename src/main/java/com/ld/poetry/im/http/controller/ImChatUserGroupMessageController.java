@@ -77,7 +77,8 @@ public class ImChatUserGroupMessageController {
             groupLambdaQuery.eq(ImChatGroupUser::getGroupId, groupId);
             groupLambdaQuery.eq(ImChatGroupUser::getUserId, userId);
             groupLambdaQuery.in(ImChatGroupUser::getUserStatus, ImConfigConst.GROUP_USER_STATUS_PASS, ImConfigConst.GROUP_USER_STATUS_SILENCE);
-            Integer count = groupLambdaQuery.count();
+            Long countLong = groupLambdaQuery.count();
+            Integer count = countLong != null ? countLong.intValue() : 0;
             if (count < 1) {
                 return PoetryResult.fail("未加群！");
             }

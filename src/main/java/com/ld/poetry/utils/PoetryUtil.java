@@ -1,6 +1,6 @@
 package com.ld.poetry.utils;
 
-import com.alibaba.fastjson.JSON;
+import com.ld.poetry.utils.JsonUtil;
 import com.ld.poetry.entity.User;
 import com.ld.poetry.entity.WebInfo;
 import com.ld.poetry.handle.PoetryRuntimeException;
@@ -59,7 +59,7 @@ public class PoetryUtil {
         WebInfo webInfo = (WebInfo) PoetryCache.get(CommonConst.WEB_INFO);
         if (webInfo != null) {
             String randomAvatar = webInfo.getRandomAvatar();
-            List<String> randomAvatars = JSON.parseArray(randomAvatar, String.class);
+            List<String> randomAvatars = JsonUtil.parseArray(randomAvatar, String.class);
             if (!CollectionUtils.isEmpty(randomAvatars)) {
                 if (StringUtils.hasText(key)) {
                     return randomAvatars.get(PoetryUtil.hashLocation(key, randomAvatars.size()));
@@ -80,7 +80,7 @@ public class PoetryUtil {
         WebInfo webInfo = (WebInfo) PoetryCache.get(CommonConst.WEB_INFO);
         if (webInfo != null) {
             String randomName = webInfo.getRandomName();
-            List<String> randomNames = JSON.parseArray(randomName, String.class);
+            List<String> randomNames = JsonUtil.parseArray(randomName, String.class);
             if (!CollectionUtils.isEmpty(randomNames)) {
                 if (StringUtils.hasText(key)) {
                     return randomNames.get(PoetryUtil.hashLocation(key, randomNames.size()));
@@ -101,7 +101,7 @@ public class PoetryUtil {
         WebInfo webInfo = (WebInfo) PoetryCache.get(CommonConst.WEB_INFO);
         if (webInfo != null) {
             String randomCover = webInfo.getRandomCover();
-            List<String> randomCovers = JSON.parseArray(randomCover, String.class);
+            List<String> randomCovers = JsonUtil.parseArray(randomCover, String.class);
             if (!CollectionUtils.isEmpty(randomCovers)) {
                 if (StringUtils.hasText(key)) {
                     return randomCovers.get(PoetryUtil.hashLocation(key, randomCovers.size()));

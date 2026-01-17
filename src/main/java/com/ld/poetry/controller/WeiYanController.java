@@ -69,9 +69,10 @@ public class WeiYanController {
         Integer userId = PoetryUtil.getUserId();
 
         LambdaQueryChainWrapper<Article> wrapper = new LambdaQueryChainWrapper<>(articleMapper);
-        Integer count = wrapper.eq(Article::getId, weiYanVO.getSource()).eq(Article::getUserId, userId).count();
+        Long countLong = wrapper.eq(Article::getId, weiYanVO.getSource()).eq(Article::getUserId, userId).count();
+        Integer count = countLong != null ? countLong.intValue() : 0;
 
-        if (count == null || count < 1) {
+        if (count < 1) {
             return PoetryResult.fail("来源不存在！");
         }
 

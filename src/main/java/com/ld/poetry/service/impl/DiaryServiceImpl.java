@@ -14,6 +14,7 @@ import com.ld.poetry.utils.*;
 import com.ld.poetry.utils.VoBuilderUtil;
 import com.ld.poetry.vo.ArticleVO;
 import com.ld.poetry.vo.BaseRequestVO;
+import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
@@ -36,6 +37,7 @@ public class DiaryServiceImpl extends ServiceImpl<DiaryMapper, Diary> implements
     private CommonQuery commonQuery;
 
     @Override
+    @org.springframework.transaction.annotation.Transactional(rollbackFor = Exception.class)
     public PoetryResult saveArticle(ArticleVO articleVO) {
         if (articleVO.getViewStatus() != null && !articleVO.getViewStatus() && !StringUtils.hasText(articleVO.getPassword())) {
             return PoetryResult.fail("请设置文章密码！");
@@ -71,6 +73,7 @@ public class DiaryServiceImpl extends ServiceImpl<DiaryMapper, Diary> implements
     }
 
     @Override
+    @org.springframework.transaction.annotation.Transactional(rollbackFor = Exception.class)
     public PoetryResult deleteArticle(Integer id) {
         Integer userId = PoetryUtil.getUserId();
         lambdaUpdate().eq(Diary::getId, id)
@@ -81,6 +84,7 @@ public class DiaryServiceImpl extends ServiceImpl<DiaryMapper, Diary> implements
     }
 
     @Override
+    @org.springframework.transaction.annotation.Transactional(rollbackFor = Exception.class)
     public PoetryResult updateArticle(ArticleVO articleVO) {
         if (articleVO.getViewStatus() != null && !articleVO.getViewStatus() && !StringUtils.hasText(articleVO.getPassword())) {
             return PoetryResult.fail("请设置文章密码！");

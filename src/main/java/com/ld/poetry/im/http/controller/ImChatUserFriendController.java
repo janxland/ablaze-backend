@@ -54,10 +54,11 @@ public class ImChatUserFriendController {
 
         Integer userId = PoetryUtil.getUserId();
 
-        Integer count = userFriendService.lambdaQuery()
+        Long countLong = userFriendService.lambdaQuery()
                 .and(wrapper -> wrapper.eq(ImChatUserFriend::getUserId, userId).eq(ImChatUserFriend::getFriendId, friendId))
                 .or(wrapper -> wrapper.eq(ImChatUserFriend::getFriendId, userId).eq(ImChatUserFriend::getUserId, friendId))
                 .count();
+        Integer count = countLong != null ? countLong.intValue() : 0;
         if (count > 0) {
             return PoetryResult.success();
         }

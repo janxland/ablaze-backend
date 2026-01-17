@@ -1,7 +1,8 @@
 package com.ld.poetry.service.impl;
 
-import com.alibaba.fastjson.JSON;
-import com.alibaba.fastjson.JSONObject;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.ld.poetry.utils.JsonUtil;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.ld.poetry.dao.UserArticleAuthMapper;
@@ -26,6 +27,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
+import java.util.Map;
+
 @Service
 @Slf4j
 public class UserArticleAuthServiceImpl
@@ -37,6 +40,8 @@ public class UserArticleAuthServiceImpl
 
     @Value("${PAY_STATUS_API_URL}")
     private String PAY_STATUS_API_URL;
+    
+    private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
     @Override
     public String createOrder(PaymentNotifyDTO paymentNotifyDTO) {
         String url = PAY_API_URL;
@@ -83,12 +88,13 @@ public class UserArticleAuthServiceImpl
     public String queryOrderStatus(PaymentNotifyDTO dto){
         try {
             dto.setUserId(String.valueOf(PoetryUtil.getUserId()));
-            JSONObject params = (JSONObject) JSONObject.toJSON(dto);
+            Map<String, Object> params = OBJECT_MAPPER.convertValue(dto, 
+                OBJECT_MAPPER.getTypeFactory().constructMapType(Map.class, String.class, Object.class));
             StringJoiner query = new StringJoiner("&");
-            for (String key : params.keySet()) {
-                Object value = params.get(key);
+            for (Map.Entry<String, Object> entry : params.entrySet()) {
+                Object value = entry.getValue();
                 if (value != null) {
-                    query.add(URLEncoder.encode(key, "UTF-8") + "=" + 
+                    query.add(URLEncoder.encode(entry.getKey(), "UTF-8") + "=" + 
                             URLEncoder.encode(value.toString(), "UTF-8"));
                 }
             }
@@ -97,8 +103,10 @@ public class UserArticleAuthServiceImpl
             try (InputStream is = conn.getInputStream();
                 BufferedReader br = new BufferedReader(new InputStreamReader(is))) {
                 
-                JSONObject res = JSON.parseObject(br.lines().collect(Collectors.joining()));
-                if ("SUCCESS".equals(res.getJSONObject("data").getString("orderStatus"))) {
+                String responseBody = br.lines().collect(Collectors.joining());
+                JsonNode res = OBJECT_MAPPER.readTree(responseBody);
+                JsonNode dataNode = res.get("data");
+                if (dataNode != null && "SUCCESS".equals(dataNode.get("orderStatus").asText())) {
                     UserArticleAuth auth = new UserArticleAuth();
                     auth.setUserId(PoetryUtil.getUserId());
                     auth.setArticleId(Integer.valueOf(dto.getProductCode()));
@@ -106,7 +114,7 @@ public class UserArticleAuthServiceImpl
                     this.createOrUpdate(auth);
                     log.info("订单支付成功，用户ID: {}, 文章ID: {}", PoetryUtil.getUserId(), dto.getProductCode());
                 }
-                return res.toJSONString();
+                return responseBody;
             } catch (Exception e) {
                 log.error("查询订单状态异常", e);
                 return e.getMessage();
@@ -137,6 +145,7 @@ public class UserArticleAuthServiceImpl
      *  - 如果不存在则插入新纪录
      */
     @Override
+    @org.springframework.transaction.annotation.Transactional(rollbackFor = Exception.class)
     public UserArticleAuth createOrUpdate(UserArticleAuth userArticleAuth) {
 
         // 1. 先查是否已有记录

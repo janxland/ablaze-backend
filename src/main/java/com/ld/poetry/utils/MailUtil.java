@@ -1,6 +1,6 @@
 package com.ld.poetry.utils;
 
-import com.alibaba.fastjson.JSON;
+import com.ld.poetry.utils.JsonUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -92,7 +92,7 @@ public class MailUtil {
     @Async
     public void sendMailMessage(List<String> to, String subject, String text) {
         log.info("发送邮件===================");
-        log.info("to：{}", JSON.toJSONString(to));
+        log.info("to：{}", JsonUtil.toJsonString(to));
         log.info("subject：{}", subject);
         log.info("text：{}", text);
         try {

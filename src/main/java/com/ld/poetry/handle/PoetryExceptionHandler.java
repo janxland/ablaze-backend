@@ -1,6 +1,6 @@
 package com.ld.poetry.handle;
 
-import com.alibaba.fastjson.JSON;
+import com.ld.poetry.utils.JsonUtil;
 import com.ld.poetry.config.PoetryResult;
 import com.ld.poetry.utils.CodeMsg;
 import com.ld.poetry.utils.PoetryUtil;
@@ -34,7 +34,7 @@ public class PoetryExceptionHandler {
         if (ex instanceof MethodArgumentNotValidException) {
             MethodArgumentNotValidException e = (MethodArgumentNotValidException) ex;
             // Map<String, String> collect = e.getFieldError().stream().collect(Collectors.toMap(FieldError::getField, FieldError::getDefaultMessage));
-            return PoetryResult.fail(JSON.toJSONString(null));
+            return PoetryResult.fail(JsonUtil.toJsonString(null));
         }
 
         if (ex instanceof MissingServletRequestParameterException) {

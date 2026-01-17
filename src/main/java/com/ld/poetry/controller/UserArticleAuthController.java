@@ -1,6 +1,6 @@
 package com.ld.poetry.controller;
 
-import com.alibaba.fastjson.JSON;
+import com.ld.poetry.utils.JsonUtil;
 import com.ld.poetry.config.PoetryResult;
 import com.ld.poetry.entity.Order;
 import com.ld.poetry.entity.UserArticleAuth;
@@ -30,7 +30,7 @@ public class UserArticleAuthController {
         if(paymentNotifyDTO.getProductCode() == null) {
             return PoetryResult.fail("ProductCode 不能为空");
         }
-        return JSON.parseObject(userArticleAuthService.queryOrderStatus(paymentNotifyDTO));
+        return JsonUtil.parseObject(userArticleAuthService.queryOrderStatus(paymentNotifyDTO), Object.class);
         
     }
       /**
@@ -46,7 +46,7 @@ public class UserArticleAuthController {
         if(PoetryUtil.getUserId() == null) {
             return PoetryResult.fail("未登录");
         }
-        return JSON.parseObject(userArticleAuthService.createOrder(paymentNotifyDTO));
+        return JsonUtil.parseObject(userArticleAuthService.createOrder(paymentNotifyDTO), Object.class);
         
     }
     /**

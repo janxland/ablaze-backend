@@ -22,6 +22,7 @@ public class CommonQuery {
     private CommentMapper commentMapper;
 
     @Autowired
+    @org.springframework.context.annotation.Lazy
     private UserService userService;
 
     @Autowired
@@ -52,7 +53,8 @@ public class CommonQuery {
             return count;
         }
         LambdaQueryChainWrapper<Comment> wrapper = new LambdaQueryChainWrapper<>(commentMapper);
-        Integer c = wrapper.eq(Comment::getSource, source).count();
+        Long countLong = wrapper.eq(Comment::getSource, source).count();
+        Integer c = countLong != null ? countLong.intValue() : 0;
         PoetryCache.put(CommonConst.COMMENT_COUNT_CACHE + source.toString(), c, CommonConst.EXPIRE);
         return c;
     }
@@ -74,7 +76,8 @@ public class CommonQuery {
         if (!CollectionUtils.isEmpty(sorts)) {
             sorts.forEach(sort -> {
                 LambdaQueryChainWrapper<Article> sortWrapper = new LambdaQueryChainWrapper<>(articleMapper);
-                Integer countOfSort = sortWrapper.eq(Article::getSortId, sort.getId()).eq(Article::getViewStatus, PoetryEnum.STATUS_ENABLE.getCode()).count();
+                Long countOfSortLong = sortWrapper.eq(Article::getSortId, sort.getId()).eq(Article::getViewStatus, PoetryEnum.STATUS_ENABLE.getCode()).count();
+                Integer countOfSort = countOfSortLong != null ? countOfSortLong.intValue() : 0;
                 sort.setCountOfSort(countOfSort);
 
                 LambdaQueryChainWrapper<Label> wrapper = new LambdaQueryChainWrapper<>(labelMapper);
@@ -82,7 +85,8 @@ public class CommonQuery {
                 if (!CollectionUtils.isEmpty(labels)) {
                     labels.forEach(label -> {
                         LambdaQueryChainWrapper<Article> labelWrapper = new LambdaQueryChainWrapper<>(articleMapper);
-                        Integer countOfLabel = labelWrapper.eq(Article::getLabelId, label.getId()).eq(Article::getViewStatus, PoetryEnum.STATUS_ENABLE.getCode()).count();
+                        Long countOfLabelLong = labelWrapper.eq(Article::getLabelId, label.getId()).eq(Article::getViewStatus, PoetryEnum.STATUS_ENABLE.getCode()).count();
+                        Integer countOfLabel = countOfLabelLong != null ? countOfLabelLong.intValue() : 0;
                         label.setCountOfLabel(countOfLabel);
                     });
                     sort.setLabels(labels);

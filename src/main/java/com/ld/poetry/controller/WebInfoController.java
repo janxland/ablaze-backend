@@ -245,7 +245,8 @@ public class WebInfoController {
     @RequirePermission(PermissionCode.PUBLIC)
     public PoetryResult<List<TreeHole>> listTreeHole() {
         List<TreeHole> treeHoles;
-        Integer count = new LambdaQueryChainWrapper<>(treeHoleMapper).count();
+        Long countLong = new LambdaQueryChainWrapper<>(treeHoleMapper).count();
+        Integer count = countLong != null ? countLong.intValue() : 0;
         if (count > CommonConst.TREE_HOLE_COUNT) {
             int i = new Random().nextInt(count + 1 - CommonConst.TREE_HOLE_COUNT);
             treeHoles = treeHoleMapper.queryAllByLimit(i, CommonConst.TREE_HOLE_COUNT);

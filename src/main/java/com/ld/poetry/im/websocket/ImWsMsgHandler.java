@@ -1,6 +1,6 @@
 package com.ld.poetry.im.websocket;
 
-import com.alibaba.fastjson.JSON;
+import com.ld.poetry.utils.JsonUtil;
 import com.baomidou.mybatisplus.extension.conditions.query.LambdaQueryChainWrapper;
 import com.ld.poetry.entity.User;
 import com.ld.poetry.im.http.entity.ImChatGroupUser;
@@ -108,7 +108,7 @@ public class ImWsMsgHandler implements IWsMsgHandler {
                 if (friend != null) {
                     imMessage.setAvatar(friend.getAvatar());
                 }
-                WsResponse wsResponse = WsResponse.fromText(JSON.toJSONString(imMessage), ImConfigConst.CHARSET);
+                WsResponse wsResponse = WsResponse.fromText(JsonUtil.toJsonString(imMessage), ImConfigConst.CHARSET);
                 Tio.sendToUser(channelContext.tioConfig, userMessage.getToId().toString(), wsResponse);
             });
             imChatUserMessageService.lambdaUpdate().in(ImChatUserMessage::getId, ids)
@@ -143,7 +143,7 @@ public class ImWsMsgHandler implements IWsMsgHandler {
             return null;
         }
         try {
-            ImMessage imMessage = JSON.parseObject(text, ImMessage.class);
+            ImMessage imMessage = JsonUtil.parseObject(text, ImMessage.class);
             WsResponse wsResponse = WsResponse.fromText(text, ImConfigConst.CHARSET);
             if (imMessage.getMessageType().intValue() == ImEnum.MESSAGE_TYPE_MSG_SINGLE.getCode()) {
                 //单聊

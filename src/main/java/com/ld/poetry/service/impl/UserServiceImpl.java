@@ -63,6 +63,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
     private ImChatUserFriendMapper imChatUserFriendMapper;
 
     @Autowired
+    @org.springframework.context.annotation.Lazy
     private TioWebsocketStarter tioWebsocketStarter;
 
     @Autowired
@@ -150,7 +151,8 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
 
         user.setPassword(new String(AES.encrypt(user.getPassword(), CommonConst.CRYPOTJS_KEY)));
 
-        Integer count = lambdaQuery().eq(User::getUsername, user.getUsername()).count();
+        Long countLong = lambdaQuery().eq(User::getUsername, user.getUsername()).count();
+        Integer count = countLong != null ? countLong.intValue() : 0;
         if (count != 0) {
             return PoetryResult.fail("用户名重复！");
         }
@@ -215,7 +217,8 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
                 return PoetryResult.fail("用户名不能包含@！");
             }
 
-            Integer count = lambdaQuery().eq(User::getUsername, user.getUsername()).ne(User::getId, PoetryUtil.getUserId()).count();
+            Long countLong = lambdaQuery().eq(User::getUsername, user.getUsername()).ne(User::getId, PoetryUtil.getUserId()).count();
+            Integer count = countLong != null ? countLong.intValue() : 0;
             if (count != 0) {
                 return PoetryResult.fail("用户名重复！");
             }
@@ -299,7 +302,8 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         User updateUser = new User();
         updateUser.setId(user.getId());
         if (flag == 1) {
-            Integer count = lambdaQuery().eq(User::getPhoneNumber, place).count();
+            Long countLong = lambdaQuery().eq(User::getPhoneNumber, place).count();
+            Integer count = countLong != null ? countLong.intValue() : 0;
             if (count != 0) {
                 return PoetryResult.fail("手机号重复！");
             }
@@ -314,7 +318,8 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
             }
 
         } else if (flag == 2) {
-            Integer count = lambdaQuery().eq(User::getEmail, place).count();
+            Long countLong = lambdaQuery().eq(User::getEmail, place).count();
+            Integer count = countLong != null ? countLong.intValue() : 0;
             if (count != 0) {
                 return PoetryResult.fail("邮箱重复！");
             }

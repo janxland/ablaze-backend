@@ -1,6 +1,6 @@
 package com.ld.poetry.config;
 
-import com.alibaba.fastjson.JSON;
+import com.ld.poetry.utils.JsonUtil;
 import com.ld.poetry.entity.WebInfo;
 import com.ld.poetry.utils.CodeMsg;
 import com.ld.poetry.utils.CommonConst;
@@ -19,7 +19,7 @@ public class WebInfoHandlerInterceptor implements HandlerInterceptor {
         return true;
         // if (webInfo == null || !webInfo.getStatus()) {
         //     response.setContentType("application/json;charset=UTF-8");
-        //     response.getWriter().write(JSON.toJSONString(PoetryResult.fail(CodeMsg.SYSTEM_REPAIR.getCode(), CodeMsg.SYSTEM_REPAIR.getMsg())));
+        //     response.getWriter().write(JsonUtil.toJsonString(PoetryResult.fail(CodeMsg.SYSTEM_REPAIR.getCode(), CodeMsg.SYSTEM_REPAIR.getMsg())));
         //     return true;
         // } else {
         //     return true;

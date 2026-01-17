@@ -351,7 +351,8 @@ public class ImChatGroupUserController {
         wrapper.eq(ImChatGroupUser::getUserId, userId);
         wrapper.eq(ImChatGroupUser::getGroupId, groupId);
         wrapper.in(ImChatGroupUser::getUserStatus, ImConfigConst.GROUP_USER_STATUS_PASS, ImConfigConst.GROUP_USER_STATUS_SILENCE);
-        Integer count = wrapper.count();
+        Long countLong = wrapper.count();
+        Integer count = countLong != null ? countLong.intValue() : 0;
         if (count < 1) {
             return PoetryResult.fail("未加群！");
         }

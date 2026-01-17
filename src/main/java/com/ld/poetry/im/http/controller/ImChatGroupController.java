@@ -188,8 +188,9 @@ public class ImChatGroupController {
     @RequirePermission(PermissionCode.LOGIN_REQUIRED)
     public PoetryResult addGroupTopic(@RequestParam("id") Integer id) {
         LambdaQueryChainWrapper<ImChatGroup> lambdaQuery = imChatGroupService.lambdaQuery();
-        Integer count = lambdaQuery.eq(ImChatGroup::getId, id)
+        Long countLong = lambdaQuery.eq(ImChatGroup::getId, id)
                 .eq(ImChatGroup::getGroupType, ImConfigConst.GROUP_TOPIC).count();
+        Integer count = countLong != null ? countLong.intValue() : 0;
         if (count == 1) {
             Tio.bindGroup(tioWebsocketStarter.getServerTioConfig(), String.valueOf(PoetryUtil.getUserId()), String.valueOf(id));
         }
