@@ -24,7 +24,10 @@ import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
 
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 /**
@@ -116,21 +119,51 @@ public class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment> impl
         }
 
         if (baseRequestVO.getFloorCommentId() == null) {
+            // 查询一级评论
             lambdaQuery().eq(Comment::getSource, baseRequestVO.getSource()).eq(Comment::getParentCommentId, CommonConst.FIRST_COMMENT).orderByAsc(Comment::getCreateTime).page((Page)baseRequestVO);
             List<Comment> comments = baseRequestVO.getRecords();
             if (CollectionUtils.isEmpty(comments)) {
                 return PoetryResult.success(baseRequestVO);
             }
+            
+            // 内存优化：批量查询所有子评论，避免N+1查询问题
+            List<Integer> parentIds = comments.stream().map(Comment::getId).collect(Collectors.toList());
+            Map<Integer, List<Comment>> childCommentsMap = new HashMap<>();
+            if (!parentIds.isEmpty()) {
+                // 批量查询所有子评论（最多5条）
+                List<Comment> allChildComments = lambdaQuery()
+                    .eq(Comment::getSource, baseRequestVO.getSource())
+                    .in(Comment::getFloorCommentId, parentIds)
+                    .orderByAsc(Comment::getCreateTime)
+                    .list();
+                
+                // 按父评论ID分组，并限制每个父评论最多5条子评论
+                Map<Integer, List<Comment>> tempMap = allChildComments.stream()
+                    .collect(Collectors.groupingBy(Comment::getFloorCommentId));
+                
+                tempMap.forEach((parentId, childList) -> {
+                    // 限制每个父评论最多5条子评论
+                    List<Comment> limitedList = childList.stream()
+                        .limit(5)
+                        .collect(Collectors.toList());
+                    childCommentsMap.put(parentId, limitedList);
+                });
+            }
+            
+            // 构建评论VO，使用预查询的子评论数据
+            final Map<Integer, List<Comment>> finalChildMap = childCommentsMap;
             List<CommentVO> commentVOs = comments.stream().map(c -> {
                 CommentVO commentVO = buildCommentVO(c);
-                Page page = new Page(1, 5);
-                lambdaQuery().eq(Comment::getSource, baseRequestVO.getSource()).eq(Comment::getFloorCommentId, c.getId()).orderByAsc(Comment::getCreateTime).page(page);
-                List<Comment> childComments = page.getRecords();
-                if (childComments != null) {
-                    List<CommentVO> ccVO = childComments.stream().map(cc -> buildCommentVO(cc)).collect(Collectors.toList());
+                List<Comment> childComments = finalChildMap.getOrDefault(c.getId(), Collections.emptyList());
+                if (!childComments.isEmpty()) {
+                    List<CommentVO> ccVO = childComments.stream()
+                        .map(cc -> buildCommentVO(cc))
+                        .collect(Collectors.toList());
+                    Page page = new Page(1, 5);
                     page.setRecords(ccVO);
+                    page.setTotal(childComments.size());
+                    commentVO.setChildComments(page);
                 }
-                commentVO.setChildComments(page);
                 return commentVO;
             }).collect(Collectors.toList());
             baseRequestVO.setRecords(commentVOs);
