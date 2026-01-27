@@ -1,6 +1,5 @@
 package com.ld.poetry.controller;
 
-
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -12,7 +11,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.ld.poetry.annotation.RequirePermission;
 import com.ld.poetry.enums.PermissionCode;
 import com.ld.poetry.config.PoetryResult;
@@ -21,7 +19,6 @@ import com.ld.poetry.service.TodolistService;
 import com.ld.poetry.utils.CommonConst;
 import com.ld.poetry.utils.PoetryCache;
 import com.ld.poetry.utils.PoetryUtil;
-import com.ld.poetry.vo.BaseRequestVO;
 
 /**
  * <p>
@@ -69,12 +66,9 @@ public class TodolistController {
     }
 
 
-    /**
-     * 查询任务List
-     */
     @PostMapping("/listTask")
     @RequirePermission(PermissionCode.PUBLIC)
-    public PoetryResult<List<Todolist>> listTask(@RequestBody Todolist todolistVO) {
+    public PoetryResult<List<Todolist>> listTask(@RequestBody(required = false) Todolist todolistVO) {
         return todolistService.listTask(todolistVO);
     }
 
