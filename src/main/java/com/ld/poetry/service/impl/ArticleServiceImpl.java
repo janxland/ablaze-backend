@@ -145,6 +145,9 @@ public class ArticleServiceImpl extends ServiceImpl<ArticleMapper, Article> impl
 
         if (articleVO.getViewStatus() != null && !articleVO.getViewStatus() && StringUtils.hasText(articleVO.getPassword())) {
             updateChainWrapper.set(Article::getPassword, articleVO.getPassword());
+        } else if (articleVO.getPassword() != null && !StringUtils.hasText(articleVO.getPassword())) {
+            // 允许清空密码（前端显式传入空字符串）
+            updateChainWrapper.set(Article::getPassword, "");
         }
         if (articleVO.getViewStatus() != null) {
             updateChainWrapper.set(Article::getViewStatus, articleVO.getViewStatus());

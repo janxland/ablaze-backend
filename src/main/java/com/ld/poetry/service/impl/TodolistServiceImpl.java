@@ -113,23 +113,31 @@ public class TodolistServiceImpl extends ServiceImpl<TodolistMapper, Todolist> i
         queryWrapper.eq(Todolist::getStatus, status);
     }
 
-    private void applyTimeRangeFilter(LambdaQueryWrapper<Todolist> queryWrapper, 
-                                     java.time.LocalDateTime startTime, 
+    private void applyTimeRangeFilter(LambdaQueryWrapper<Todolist> queryWrapper,
+                                     java.time.LocalDateTime startTime,
                                      java.time.LocalDateTime endTime) {
         if (startTime == null && endTime == null) {
             return;
         }
-        
-        if (startTime != null && endTime != null) {
-            queryWrapper.and(w -> w
-                .and(i -> i.le(Todolist::getStartTime, endTime).or().isNull(Todolist::getStartTime))
-                .and(i -> i.ge(Todolist::getEndTime, startTime).or().isNull(Todolist::getEndTime))
-            );
-        } else if (startTime != null) {
-            queryWrapper.and(w -> w.ge(Todolist::getEndTime, startTime).or().isNull(Todolist::getEndTime));
-        } else {
-            queryWrapper.and(w -> w.le(Todolist::getStartTime, endTime).or().isNull(Todolist::getStartTime));
-        }
+
+        // 历史数据中存在 end_time < start_time 的脏数据（早期前端把字段写反过），
+        // 直接按列名做 overlap 会把绝大多数任务过滤掉。
+        // 这里用 LEAST/GREATEST 把两列归一成 [min, max] 区间再判断 overlap，
+        // 同时允许任意一列为 NULL 的任务参与匹配。
+        queryWrapper.and(w -> {
+            if (startTime != null && endTime != null) {
+                w.apply("(start_time IS NULL OR end_time IS NULL "
+                        + "OR LEAST(start_time, end_time) <= {0})", endTime)
+                 .apply("(start_time IS NULL OR end_time IS NULL "
+                        + "OR GREATEST(start_time, end_time) >= {0})", startTime);
+            } else if (startTime != null) {
+                w.apply("(start_time IS NULL OR end_time IS NULL "
+                        + "OR GREATEST(start_time, end_time) >= {0})", startTime);
+            } else {
+                w.apply("(start_time IS NULL OR end_time IS NULL "
+                        + "OR LEAST(start_time, end_time) <= {0})", endTime);
+            }
+        });
     }
 
     private void applyOtherFilters(LambdaQueryWrapper<Todolist> queryWrapper, Todolist todolistVO) {
