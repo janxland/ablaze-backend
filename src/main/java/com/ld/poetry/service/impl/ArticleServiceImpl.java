@@ -54,43 +54,26 @@ public class ArticleServiceImpl extends ServiceImpl<ArticleMapper, Article> impl
 
     @Override
     public PoetryResult saveArticle(ArticleVO articleVO) {
-        // 扁平化处理：参数校验提前返回
-        if (!validateArticlePassword(articleVO)) {
-            return PoetryResult.fail("请设置文章密码！");
-        }
-        
+        // 不再硬性要求私密文章必须设置密码：viewStatus 控制可见性，password 仅作为可选访问口令
         Article article = buildArticleFromVO(articleVO);
         save(article);
         refreshSortInfoCache();
-        
         return PoetryResult.success();
     }
-    
+
     /**
-     * 验证文章密码（扁平化、低耦合）
-     */
-    private boolean validateArticlePassword(ArticleVO articleVO) {
-        if (articleVO.getViewStatus() != null && !articleVO.getViewStatus() && !StringUtils.hasText(articleVO.getPassword())) {
-            return false;
-        }
-        return true;
-    }
-    
-    /**
-     * 从VO构建Article实体（扁平化、低耦合）
+     * 从 VO 构建 Article 实体（保存场景）。
+     * 约定：null 表示前端未提交该字段；空串视为显式清空。
      */
     private Article buildArticleFromVO(ArticleVO articleVO) {
         Article article = new Article();
-        
-        // 扁平化处理：分别设置各个属性
         if (StringUtils.hasText(articleVO.getArticleCover())) {
             article.setArticleCover(articleVO.getArticleCover());
         }
-        
-        if (articleVO.getViewStatus() != null && !articleVO.getViewStatus() && StringUtils.hasText(articleVO.getPassword())) {
+        // 密码：仅当显式传入非空时才落库；空串/缺省 → 不设置（即无密码）
+        if (StringUtils.hasText(articleVO.getPassword())) {
             article.setPassword(articleVO.getPassword());
         }
-        
         article.setViewStatus(articleVO.getViewStatus());
         article.setCommentStatus(articleVO.getCommentStatus());
         article.setRecommendStatus(articleVO.getRecommendStatus());
@@ -99,7 +82,6 @@ public class ArticleServiceImpl extends ServiceImpl<ArticleMapper, Article> impl
         article.setSortId(articleVO.getSortId());
         article.setLabelId(articleVO.getLabelId());
         article.setUserId(PoetryUtil.getUserId());
-        
         return article;
     }
 
@@ -116,12 +98,10 @@ public class ArticleServiceImpl extends ServiceImpl<ArticleMapper, Article> impl
 
     @Override
     public PoetryResult updateArticle(ArticleVO articleVO) {
-        if (articleVO.getViewStatus() != null && !articleVO.getViewStatus() && !StringUtils.hasText(articleVO.getPassword())) {
-            return PoetryResult.fail("请设置文章密码！");
-        }
-
+        // 通用 patch 风格更新：null 表示该字段不更改；非 null（含空串）→ 落库
+        // 不再要求私密文章必须有密码，允许空密码保存（前端可清空密码）
         Integer userId = PoetryUtil.getUserId();
-        LambdaUpdateChainWrapper<Article> updateChainWrapper = lambdaUpdate()
+        LambdaUpdateChainWrapper<Article> wrapper = lambdaUpdate()
                 .eq(Article::getId, articleVO.getId())
                 .eq(Article::getUserId, userId)
                 .set(Article::getLabelId, articleVO.getLabelId())
@@ -132,27 +112,25 @@ public class ArticleServiceImpl extends ServiceImpl<ArticleMapper, Article> impl
                 .set(Article::getArticleContent, articleVO.getArticleContent())
                 .set(Article::getKeywords, articleVO.getKeywords());
 
+        // 仅当显式提交了对应字段时才更新（避免误清空）
         if (StringUtils.hasText(articleVO.getArticleCover())) {
-            updateChainWrapper.set(Article::getArticleCover, articleVO.getArticleCover());
+            wrapper.set(Article::getArticleCover, articleVO.getArticleCover());
         }
         if (articleVO.getCommentStatus() != null) {
-            updateChainWrapper.set(Article::getCommentStatus, articleVO.getCommentStatus());
+            wrapper.set(Article::getCommentStatus, articleVO.getCommentStatus());
         }
-
         if (articleVO.getRecommendStatus() != null) {
-            updateChainWrapper.set(Article::getRecommendStatus, articleVO.getRecommendStatus());
-        }
-
-        if (articleVO.getViewStatus() != null && !articleVO.getViewStatus() && StringUtils.hasText(articleVO.getPassword())) {
-            updateChainWrapper.set(Article::getPassword, articleVO.getPassword());
-        } else if (articleVO.getPassword() != null && !StringUtils.hasText(articleVO.getPassword())) {
-            // 允许清空密码（前端显式传入空字符串）
-            updateChainWrapper.set(Article::getPassword, "");
+            wrapper.set(Article::getRecommendStatus, articleVO.getRecommendStatus());
         }
         if (articleVO.getViewStatus() != null) {
-            updateChainWrapper.set(Article::getViewStatus, articleVO.getViewStatus());
+            wrapper.set(Article::getViewStatus, articleVO.getViewStatus());
         }
-        updateChainWrapper.update();
+        // 密码：null = 不修改；"" = 显式清空；非空字符串 = 更新
+        if (articleVO.getPassword() != null) {
+            wrapper.set(Article::getPassword, articleVO.getPassword());
+        }
+
+        wrapper.update();
         refreshSortInfoCache();
         return PoetryResult.success();
     }

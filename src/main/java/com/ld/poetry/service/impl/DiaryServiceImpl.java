@@ -39,9 +39,7 @@ public class DiaryServiceImpl extends ServiceImpl<DiaryMapper, Diary> implements
     @Override
     @org.springframework.transaction.annotation.Transactional(rollbackFor = Exception.class)
     public PoetryResult saveArticle(ArticleVO articleVO) {
-        if (articleVO.getViewStatus() != null && !articleVO.getViewStatus() && !StringUtils.hasText(articleVO.getPassword())) {
-            return PoetryResult.fail("请设置文章密码！");
-        }
+        // 不再硬性要求私密说说必须设置密码：viewStatus 控制可见性，password 仅作为可选访问口令
         Diary article = new Diary();
         if (StringUtils.hasText(articleVO.getArticleCover())) {
             article.setArticleItems(articleVO.getArticleCover());
@@ -55,7 +53,8 @@ public class DiaryServiceImpl extends ServiceImpl<DiaryMapper, Diary> implements
         if (StringUtils.hasText(articleVO.getArticleEmotion())) {
             article.setArticleEmotion(articleVO.getArticleEmotion());
         }
-        if (articleVO.getViewStatus() != null && !articleVO.getViewStatus() && StringUtils.hasText(articleVO.getPassword())) {
+        // 仅当显式传入非空时才落库密码
+        if (StringUtils.hasText(articleVO.getPassword())) {
             article.setPassword(articleVO.getPassword());
         }
 
@@ -86,12 +85,10 @@ public class DiaryServiceImpl extends ServiceImpl<DiaryMapper, Diary> implements
     @Override
     @org.springframework.transaction.annotation.Transactional(rollbackFor = Exception.class)
     public PoetryResult updateArticle(ArticleVO articleVO) {
-        if (articleVO.getViewStatus() != null && !articleVO.getViewStatus() && !StringUtils.hasText(articleVO.getPassword())) {
-            return PoetryResult.fail("请设置文章密码！");
-        }
-
+        // 通用 patch 风格更新：null 表示该字段不更改；非 null（含空串）→ 落库
+        // 允许空密码保存
         Integer userId = PoetryUtil.getUserId();
-        LambdaUpdateChainWrapper<Diary> updateChainWrapper = lambdaUpdate()
+        LambdaUpdateChainWrapper<Diary> wrapper = lambdaUpdate()
                 .eq(Diary::getId, articleVO.getId())
                 .eq(Diary::getUserId, userId)
                 .set(Diary::getLabelId, articleVO.getLabelId())
@@ -101,23 +98,32 @@ public class DiaryServiceImpl extends ServiceImpl<DiaryMapper, Diary> implements
                 .set(Diary::getArticleContent, articleVO.getArticleContent());
 
         if (StringUtils.hasText(articleVO.getArticleCover())) {
-            updateChainWrapper.set(Diary::getArticleItems, articleVO.getArticleCover());
+            wrapper.set(Diary::getArticleItems, articleVO.getArticleCover());
+        }
+        if (StringUtils.hasText(articleVO.getArticleAddress())) {
+            wrapper.set(Diary::getArticleAddress, articleVO.getArticleAddress());
+        }
+        if (StringUtils.hasText(articleVO.getArticleDevice())) {
+            wrapper.set(Diary::getArticleDevice, articleVO.getArticleDevice());
+        }
+        if (StringUtils.hasText(articleVO.getArticleEmotion())) {
+            wrapper.set(Diary::getArticleEmotion, articleVO.getArticleEmotion());
         }
         if (articleVO.getCommentStatus() != null) {
-            updateChainWrapper.set(Diary::getCommentStatus, articleVO.getCommentStatus());
+            wrapper.set(Diary::getCommentStatus, articleVO.getCommentStatus());
         }
-
         if (articleVO.getRecommendStatus() != null) {
-            updateChainWrapper.set(Diary::getRecommendStatus, articleVO.getRecommendStatus());
-        }
-
-        if (articleVO.getViewStatus() != null && !articleVO.getViewStatus() && StringUtils.hasText(articleVO.getPassword())) {
-            updateChainWrapper.set(Diary::getPassword, articleVO.getPassword());
+            wrapper.set(Diary::getRecommendStatus, articleVO.getRecommendStatus());
         }
         if (articleVO.getViewStatus() != null) {
-            updateChainWrapper.set(Diary::getViewStatus, articleVO.getViewStatus());
+            wrapper.set(Diary::getViewStatus, articleVO.getViewStatus());
         }
-        updateChainWrapper.update();
+        // 密码：null = 不修改；"" = 显式清空；非空字符串 = 更新
+        if (articleVO.getPassword() != null) {
+            wrapper.set(Diary::getPassword, articleVO.getPassword());
+        }
+
+        wrapper.update();
         refreshSortInfoCache();
         return PoetryResult.success();
     }

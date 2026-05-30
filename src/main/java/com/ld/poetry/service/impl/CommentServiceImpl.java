@@ -263,17 +263,13 @@ public class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment> impl
      */
     private PoetryResult<Page> listAdminCommentForBoss(BaseRequestVO baseRequestVO) {
         LambdaQueryChainWrapper<Comment> wrapper = lambdaQuery();
-        
+
         if (baseRequestVO.getSource() != null) {
             wrapper.eq(Comment::getSource, baseRequestVO.getSource());
         }
-        
-        IPage<Comment> result = page(
-                new Page<>(baseRequestVO.getCurrent(), baseRequestVO.getSize()),
-                wrapper.getWrapper()
-        );
-        wrapper.orderByDesc(Comment::getCreateTime).page(result);
-        
+
+        wrapper.orderByDesc(Comment::getCreateTime).page((Page) baseRequestVO);
+
         return PoetryResult.success(baseRequestVO);
     }
     
@@ -296,13 +292,9 @@ public class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment> impl
         } else {
             wrapper.in(Comment::getSource, userArticleIds);
         }
-        
-        IPage<Comment> result = page(
-                new Page<>(baseRequestVO.getCurrent(), baseRequestVO.getSize()),
-                wrapper.getWrapper()
-        );
-        wrapper.orderByDesc(Comment::getCreateTime).page(result);
-        
+
+        wrapper.orderByDesc(Comment::getCreateTime).page((Page) baseRequestVO);
+
         return PoetryResult.success(baseRequestVO);
     }
     
