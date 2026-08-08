@@ -80,10 +80,10 @@ public class CodeGenerator {
     private static DataSourceConfig saraDataSourceConfig() {
         return new DataSourceConfig()
             .setDbType(DbType.MYSQL)
-            .setUrl("jdbc:mysql://onecloud:3306/Ablaze?useUnicode=true&characterEncoding=utf-8&serverTimezone=Asia/Shanghai")
+            .setUrl(System.getenv().getOrDefault("DB_URL", "jdbc:mysql://127.0.0.1:3306/ablaze?useUnicode=true&characterEncoding=utf-8&serverTimezone=Asia/Shanghai"))
             .setDriverName("com.mysql.cj.jdbc.Driver")
-            .setUsername("test")
-            .setPassword("janx123666land");
+            .setUsername(System.getenv().getOrDefault("DB_USERNAME", "ablaze"))
+            .setPassword(System.getenv().getOrDefault("DB_PASSWORD", ""));
     }
 
 

@@ -1,0 +1,24 @@
+services:
+  ablaze:
+    build:
+      context: .
+    image: ${ABLAZE_IMAGE:-ablaze:local}
+    container_name: ablaze-0
+    restart: unless-stopped
+    env_file:
+      - .env.docker
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    ports:
+      - "8181:8181"
+      - "9999:9999"
+    volumes:
+      - ./logs:/app/logs
+    tmpfs:
+      - /tmp:size=64m,noexec,nosuid
+    read_only: true
+    security_opt:
+      - no-new-privileges:true
+    mem_limit: 768m
+    cpus: "1.0"
+    stop_grace_period: 30s

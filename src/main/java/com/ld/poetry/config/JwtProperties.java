@@ -15,7 +15,7 @@ public class JwtProperties {
     /**
      * JWT密钥，与Node.js鉴权中心保持一致
      */
-    private String secret = "J$A@N#X$L%A&N*D";
+    private String secret = "";
     
     /**
      * Token过期时间（秒），默认24小时

@@ -75,11 +75,11 @@ public class CommonConst {
     /**
      * 密钥
      */
-    public static final String CRYPOTJS_KEY = "J$A@N#X$L%A&N*D^";
+    public static final String CRYPOTJS_KEY = environmentValue("LEGACY_CRYPTO_KEY");
     /**
      * JWT密钥
      */
-    public static final String JWT_KEY = "J$A@N#X$L%A&N*D";
+    public static final String JWT_KEY = environmentValue("JWT_COMPAT_KEY");
     /**
      * 根据用户ID获取用户信息
      */
@@ -123,11 +123,16 @@ public class CommonConst {
     /**
      * 七牛云
      */
-    public static final String ACCESS_KEY = "O5u9pDpH4cq2DzN0j2fuFTB21EncLgxQGa1bKiQm";
+    public static final String ACCESS_KEY = environmentValue("QINIU_ACCESS_KEY");
 
-    public static final String SECRET_KEY = "m1P1uLViSiXyLP0qqXepKNj7VEpZG87BM4jrGj6i";
+    public static final String SECRET_KEY = environmentValue("QINIU_SECRET_KEY");
 
-    public static final String BUCKET = "roginx";
+    public static final String BUCKET = environmentValue("QINIU_BUCKET");
+
+    private static String environmentValue(String name) {
+        String value = System.getenv(name);
+        return value == null ? "" : value;
+    }
 
     /**
      * 资源类型

@@ -15,6 +15,7 @@ import com.ld.poetry.utils.VoBuilderUtil;
 import com.ld.poetry.vo.ArticleVO;
 import com.ld.poetry.vo.BaseRequestVO;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.BeanUtils;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
 

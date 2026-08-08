@@ -27,6 +27,8 @@ Thumbs.db
 # Spring Boot
 application-local.properties
 application-dev-local.properties
+.env.docker
+DEPLOY-ENV.local.md
 
 # Logs
 logs/
@@ -48,4 +50,3 @@ logs/
 *.zip
 *.tar.gz
 *.rar
-
