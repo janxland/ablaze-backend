@@ -50,3 +50,10 @@ logs/
 *.zip
 *.tar.gz
 *.rar
+
+# 环境变量/凭证（严禁提交）
+.env
+.env.*
+!.env.*.example
+.roginx-cli/
+credentials.json
