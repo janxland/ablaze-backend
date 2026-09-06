@@ -148,7 +148,7 @@ public class UserController {
      * 1 手机号
      * 2 邮箱
      */
-    @Operation(summary = "2 邮箱")
+    @Operation(summary = "获取邮箱验证码")
     @GetMapping("/getCode")
     @RequirePermission(PermissionCode.LOGIN_REQUIRED)
     public PoetryResult getCode(@RequestParam("flag") Integer flag) {
@@ -161,7 +161,7 @@ public class UserController {
      * 1 手机号
      * 2 邮箱
      */
-    @Operation(summary = "2 邮箱")
+    @Operation(summary = "获取绑定邮箱验证码")
     @GetMapping("/getCodeForBind")
     @RequirePermission(PermissionCode.LOGIN_REQUIRED)
     public PoetryResult getCodeForBind(@RequestParam("place") String place, @RequestParam("flag") Integer flag) {
@@ -175,7 +175,7 @@ public class UserController {
      * 2 邮箱
      * 3 密码：place=老密码&password=新密码
      */
-    @Operation(summary = "3 密码：place=老密码&password=新密码")
+    @Operation(summary = "更新账号安全信息（邮箱/手机/密码）")
     @PostMapping("/updateSecretInfo")
     @RequirePermission(PermissionCode.LOGIN_REQUIRED)
     public PoetryResult<UserVO> updateSecretInfo(@RequestParam("place") String place, @RequestParam("flag") Integer flag, @RequestParam(value = "code", required = false) String code, @RequestParam("password") String password) {
@@ -189,7 +189,7 @@ public class UserController {
      * 1 手机号
      * 2 邮箱
      */
-    @Operation(summary = "2 邮箱")
+    @Operation(summary = "获取忘记密码验证码")
     @GetMapping("/getCodeForForgetPassword")
     public PoetryResult getCodeForForgetPassword(@RequestParam("place") String place, @RequestParam("flag") Integer flag) {
         return userService.getCodeForForgetPassword(place, flag);
@@ -201,7 +201,7 @@ public class UserController {
      * 1 手机号
      * 2 邮箱
      */
-    @Operation(summary = "2 邮箱")
+    @Operation(summary = "忘记密码重置")
     @PostMapping("/updateForForgetPassword")
     public PoetryResult updateForForgetPassword(@RequestParam("place") String place, @RequestParam("flag") Integer flag, @RequestParam("code") String code, @RequestParam("password") String password) {
         return userService.updateForForgetPassword(place, flag, code, password);
