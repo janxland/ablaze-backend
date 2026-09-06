@@ -22,7 +22,6 @@ import java.util.List;
  */
 @RestController
 @Tag(name = "UserPermission", description = "用户权限")
-    @Operation(summary = "仅站长可以操作")
 @RequestMapping("/user-permissions")
 public class UserPermissionController {
 

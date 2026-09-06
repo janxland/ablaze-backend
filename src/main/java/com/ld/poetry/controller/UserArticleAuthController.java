@@ -18,7 +18,6 @@ import javax.annotation.Resource;
 
 @RestController
 @Tag(name = "UserArticleAuth", description = "文章访问授权")
-    @Operation(summary = "查询-order")
 @RequestMapping("/userArticleAuth")
 public class UserArticleAuthController {
 
