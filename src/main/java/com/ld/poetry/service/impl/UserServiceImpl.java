@@ -28,6 +28,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.DigestUtils;
@@ -63,6 +64,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
     private ImChatUserFriendMapper imChatUserFriendMapper;
 
     @Autowired
+    @Lazy // 切断 tioWebsocketStarter → imWsMsgHandler → … → userServiceImpl → tioWebsocketStarter 构造器循环依赖
     private TioWebsocketStarter tioWebsocketStarter;
 
     @Autowired
