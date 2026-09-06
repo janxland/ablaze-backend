@@ -24,8 +24,18 @@ public class PermissionGuard {
     public Object checkPermission(ProceedingJoinPoint joinPoint, RequirePermission requirePermission) throws Throwable {
         PermissionCode requiredPermission = requirePermission.value();
         
-        // 公开接口直接放行
+        // 公开接口放行，但 best-effort 解析 token 填充 AuthContext：
+        // 让 listTask 等公开查询能拿到当前用户做数据归属过滤（未登录/无效 token 不影响匿名访问）
         if (requiredPermission == PermissionCode.PUBLIC) {
+            try {
+                AuthContext.UserInfo optionalUser = authHelper.parseUserFromRequest();
+                if (optionalUser != null) {
+                    AuthContext.setCurrentUser(optionalUser.getUserId(), optionalUser.getUsername(),
+                            optionalUser.getEmail(), optionalUser.getUserType());
+                }
+            } catch (Exception e) {
+                log.debug("PUBLIC 接口 token 解析失败，按匿名处理: {}", e.getMessage());
+            }
             return joinPoint.proceed();
         }
         

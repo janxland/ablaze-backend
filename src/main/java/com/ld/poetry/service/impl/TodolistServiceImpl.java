@@ -27,6 +27,15 @@ public class TodolistServiceImpl extends ServiceImpl<TodolistMapper, Todolist> i
 
     @Override
     public PoetryResult saveTask(Todolist todolistVO) {
+        // 数据归属兜底：executor 为空/无效（如历史遗留的 "0"）时强制写当前登录用户，
+        // 避免出现查不到的孤儿任务（历史上 30 条 executor='0' 的教训）
+        Integer userId = PoetryUtil.getUserId();
+        if (userId != null) {
+            String executor = todolistVO.getExecutor();
+            if (executor == null || executor.trim().isEmpty() || "0".equals(executor.trim())) {
+                todolistVO.setExecutor(userId.toString());
+            }
+        }
         save(todolistVO);
         return PoetryResult.success();
     }
