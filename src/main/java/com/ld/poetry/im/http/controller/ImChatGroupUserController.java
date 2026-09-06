@@ -22,6 +22,8 @@ import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -42,6 +44,7 @@ import java.util.stream.Collectors;
  * @RequirePermission(PermissionCode.SUPER_ADMIN)21-12-02
  */
 @RestController
+@Tag(name = "ImChatGroupUser", description = "ImChatGroupUser 接口")
 @RequestMapping("/imChatGroupUser")
 public class ImChatGroupUserController {
 
@@ -60,6 +63,7 @@ public class ImChatGroupUserController {
     /**
      * 申请加群
      */
+    @Operation(summary = "enterGroup")
     @GetMapping("/enterGroup")
     @RequirePermission(PermissionCode.LOGIN_REQUIRED)
     public PoetryResult enterGroup(@RequestParam("id") Integer id, @RequestParam(value = "remark", required = false) String remark) {
@@ -105,6 +109,7 @@ public class ImChatGroupUserController {
      * <p>
      * 用户状态[-1:审核不通过或者踢出群组，1:审核通过，2:禁言]
      */
+    @Operation(summary = "changeUserStatus")
     @GetMapping("/changeUserStatus")
     @RequirePermission(PermissionCode.LOGIN_REQUIRED)
     public PoetryResult changeUserStatus(@RequestParam("groupId") Integer groupId,
@@ -171,6 +176,7 @@ public class ImChatGroupUserController {
      * adminFlag = true 是管理员
      * adminFlag = false 不是管理员
      */
+    @Operation(summary = "changeAdmin")
     @GetMapping("/changeAdmin")
     @RequirePermission(PermissionCode.LOGIN_REQUIRED)
     public PoetryResult changeAdmin(@RequestParam("groupId") Integer groupId,
@@ -202,6 +208,7 @@ public class ImChatGroupUserController {
     /**
      * 退群
      */
+    @Operation(summary = "quitGroup")
     @GetMapping("/quitGroup")
     @RequirePermission(PermissionCode.LOGIN_REQUIRED)
     public PoetryResult quitGroup(@RequestParam("id") Integer id) {
@@ -251,6 +258,7 @@ public class ImChatGroupUserController {
     /**
      * 群管理员查询群用户
      */
+    @Operation(summary = "查询-groupuserbystatus")
     @GetMapping("/getGroupUserByStatus")
     @RequirePermission(PermissionCode.LOGIN_REQUIRED)
     public PoetryResult<Page> getGroupUserByStatus(@RequestParam(value = "groupId", required = false) Integer groupId,
@@ -332,6 +340,7 @@ public class ImChatGroupUserController {
     /**
      * 群用户查询群用户
      */
+    @Operation(summary = "查询-groupuser")
     @GetMapping("/getGroupUser")
     @RequirePermission(PermissionCode.LOGIN_REQUIRED)
     public PoetryResult<Page> getGroupUser(@RequestParam("groupId") Integer groupId,

@@ -20,6 +20,8 @@ import com.ld.poetry.utils.PoetryUtil;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.util.CollectionUtils;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -38,6 +40,7 @@ import java.util.stream.Collectors;
  * @since 2021-12-02
  */
 @RestController
+@Tag(name = "ImChatUserGroupMessage", description = "ImChatUserGroupMessage 接口")
 @RequestMapping("/imChatUserGroupMessage")
 public class ImChatUserGroupMessageController {
 
@@ -56,6 +59,7 @@ public class ImChatUserGroupMessageController {
     /**
      * 获取群消息（只获取前四十条）
      */
+    @Operation(summary = "分页列表-groupmessage")
     @GetMapping("/listGroupMessage")
     @RequirePermission(PermissionCode.LOGIN_REQUIRED)
     public PoetryResult<Page> listGroupMessage(@RequestParam(value = "current", defaultValue = "1") Long current,

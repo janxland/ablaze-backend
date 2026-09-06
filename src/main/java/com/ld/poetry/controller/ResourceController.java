@@ -15,6 +15,8 @@ import com.ld.poetry.vo.BaseRequestVO;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.util.StringUtils;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Collections;
@@ -30,6 +32,7 @@ import java.util.stream.Collectors;
  * @since 2022-03-06
  */
 @RestController
+@Tag(name = "Resource", description = "资源管理")
 @RequestMapping("/resource")
 public class ResourceController {
 
@@ -39,6 +42,7 @@ public class ResourceController {
     /**
      * 保存
      */
+    @Operation(summary = "保存")
     @PostMapping("/saveResource")
     @RequirePermission(PermissionCode.LOGIN_REQUIRED)
     public PoetryResult saveResource(@RequestBody Resource resource) {
@@ -56,6 +60,7 @@ public class ResourceController {
     /**
      * 删除
      */
+    @Operation(summary = "删除")
     @PostMapping("/deleteResource")
     @RequirePermission(PermissionCode.SUPER_ADMIN)
     public PoetryResult deleteResource(@RequestParam("path") String path) {
@@ -67,6 +72,7 @@ public class ResourceController {
     /**
      * 查询表情包
      */
+    @Operation(summary = "查询表情包")
     @GetMapping("/getImageList")
     @RequirePermission(PermissionCode.LOGIN_REQUIRED)
     public PoetryResult<List<String>> getImageList() {
@@ -83,6 +89,7 @@ public class ResourceController {
     /**
      * 查询资源
      */
+    @Operation(summary = "查询资源")
     @PostMapping("/listResource")
     @RequirePermission(PermissionCode.SUPER_ADMIN)
     public PoetryResult<Page> listResource(@RequestBody BaseRequestVO baseRequestVO) {
@@ -95,6 +102,7 @@ public class ResourceController {
     /**
      * 修改资源状态
      */
+    @Operation(summary = "修改资源状态")
     @GetMapping("/changeResourceStatus")
     @RequirePermission(PermissionCode.SUPER_ADMIN)
     public PoetryResult changeResourceStatus(@RequestParam("id") Integer id, @RequestParam("flag") Boolean flag) {

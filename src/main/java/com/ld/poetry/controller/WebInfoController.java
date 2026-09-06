@@ -20,6 +20,8 @@ import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.HashMap;
@@ -38,6 +40,7 @@ import java.util.Random;
  * 仅站长可以操作
  */
 @RestController
+@Tag(name = "WebInfo", description = "站点信息")
 @RequestMapping("/webInfo")
 public class WebInfoController {
 
@@ -67,6 +70,7 @@ public class WebInfoController {
      * 更新网站信息
      */
     @RequirePermission(PermissionCode.SUPER_ADMIN)
+    @Operation(summary = "更新网站信息")
     @PostMapping("/updateWebInfo")
     public PoetryResult<WebInfo> updateWebInfo(@RequestBody WebInfo webInfo) {
         webInfoService.updateById(webInfo);
@@ -83,6 +87,7 @@ public class WebInfoController {
     /**
      * 获取网站信息
      */
+    @Operation(summary = "获取网站信息")
     @GetMapping("/getWebInfo")
     @RequirePermission(PermissionCode.PUBLIC)
     public PoetryResult<WebInfo> getWebInfo() {
@@ -102,6 +107,7 @@ public class WebInfoController {
     /**
      * 获取分类标签信息
      */
+    @Operation(summary = "获取分类标签信息")
     @GetMapping("/getSortInfo")
     @RequirePermission(PermissionCode.PUBLIC)
     public PoetryResult<List<Sort>> getSortInfo() {
@@ -115,6 +121,7 @@ public class WebInfoController {
     /**
      * 获取看板娘消息
      */
+    @Operation(summary = "获取看板娘消息")
     @GetMapping("/getWaifuJson")
     @RequirePermission(PermissionCode.PUBLIC)
     public String getWaifuJson() {
@@ -130,6 +137,7 @@ public class WebInfoController {
      * 保存
      */
     @RequirePermission(PermissionCode.SUPER_ADMIN)
+    @Operation(summary = "保存")
     @PostMapping("/saveResourcePath")
     public PoetryResult saveResourcePath(@RequestBody ResourcePath resourcePath) {
         if (!StringUtils.hasText(resourcePath.getTitle()) || !StringUtils.hasText(resourcePath.getType())) {
@@ -143,6 +151,7 @@ public class WebInfoController {
      * 保存友链
      */
     @RequirePermission(PermissionCode.FILE_UPLOAD_TOKEN)
+    @Operation(summary = "保存友链")
     @PostMapping("/saveFriend")
     public PoetryResult saveFriend(@RequestBody ResourcePath resourcePath) {
         if (!StringUtils.hasText(resourcePath.getTitle()) || !StringUtils.hasText(resourcePath.getCover()) ||
@@ -164,6 +173,7 @@ public class WebInfoController {
     /**
      * 删除
      */
+    @Operation(summary = "删除")
     @GetMapping("/deleteResourcePath")
     @RequirePermission(PermissionCode.SUPER_ADMIN)
     public PoetryResult deleteResourcePath(@RequestParam("id") Integer id) {
@@ -175,6 +185,7 @@ public class WebInfoController {
     /**
      * 更新
      */
+    @Operation(summary = "更新")
     @PostMapping("/updateResourcePath")
     @RequirePermission(PermissionCode.SUPER_ADMIN)
     public PoetryResult updateResourcePath(@RequestBody ResourcePath resourcePath) {
@@ -192,6 +203,7 @@ public class WebInfoController {
     /**
      * 查询资源
      */
+    @Operation(summary = "查询资源")
     @PostMapping("/listResourcePath")
     @RequirePermission(PermissionCode.PUBLIC)
     public PoetryResult<Page> listResourcePath(@RequestBody BaseRequestVO baseRequestVO) {
@@ -213,6 +225,7 @@ public class WebInfoController {
     /**
      * 保存
      */
+    @Operation(summary = "保存")
     @PostMapping("/saveTreeHole")
     @RequirePermission(PermissionCode.PUBLIC)
     public PoetryResult<TreeHole> saveTreeHole(@RequestBody TreeHole treeHole) {
@@ -230,6 +243,7 @@ public class WebInfoController {
     /**
      * 删除
      */
+    @Operation(summary = "删除")
     @GetMapping("/deleteTreeHole")
     @RequirePermission(PermissionCode.SUPER_ADMIN)
     public PoetryResult deleteTreeHole(@RequestParam("id") Integer id) {
@@ -241,6 +255,7 @@ public class WebInfoController {
     /**
      * 查询List
      */
+    @Operation(summary = "查询List")
     @GetMapping("/listTreeHole")
     @RequirePermission(PermissionCode.PUBLIC)
     public PoetryResult<List<TreeHole>> listTreeHole() {
@@ -266,6 +281,7 @@ public class WebInfoController {
     /**
      * 保存
      */
+    @Operation(summary = "保存")
     @PostMapping("/saveSort")
     @RequirePermission(PermissionCode.SUPER_ADMIN)
     public PoetryResult saveSort(@RequestBody Sort sort) {
@@ -289,6 +305,7 @@ public class WebInfoController {
     /**
      * 删除
      */
+    @Operation(summary = "删除")
     @GetMapping("/deleteSort")
     @RequirePermission(PermissionCode.SUPER_ADMIN)
     public PoetryResult deleteSort(@RequestParam("id") Integer id) {
@@ -304,6 +321,7 @@ public class WebInfoController {
     /**
      * 更新
      */
+    @Operation(summary = "更新")
     @PostMapping("/updateSort")
     @RequirePermission(PermissionCode.SUPER_ADMIN)
     public PoetryResult updateSort(@RequestBody Sort sort) {
@@ -319,6 +337,7 @@ public class WebInfoController {
     /**
      * 查询List
      */
+    @Operation(summary = "查询List")
     @GetMapping("/listSort")
     @RequirePermission(PermissionCode.PUBLIC)
     public PoetryResult<List<Sort>> listSort() {
@@ -329,6 +348,7 @@ public class WebInfoController {
     /**
      * 保存
      */
+    @Operation(summary = "保存")
     @PostMapping("/saveLabel")
     @RequirePermission(PermissionCode.SUPER_ADMIN)
     public PoetryResult saveLabel(@RequestBody Label label) {
@@ -347,6 +367,7 @@ public class WebInfoController {
     /**
      * 删除
      */
+    @Operation(summary = "删除")
     @GetMapping("/deleteLabel")
     @RequirePermission(PermissionCode.SUPER_ADMIN)
     public PoetryResult deleteLabel(@RequestParam("id") Integer id) {
@@ -362,6 +383,7 @@ public class WebInfoController {
     /**
      * 更新
      */
+    @Operation(summary = "更新")
     @PostMapping("/updateLabel")
     @RequirePermission(PermissionCode.SUPER_ADMIN)
     public PoetryResult updateLabel(@RequestBody Label label) {
@@ -377,6 +399,7 @@ public class WebInfoController {
     /**
      * 查询List
      */
+    @Operation(summary = "查询List")
     @GetMapping("/listLabel")
     @RequirePermission(PermissionCode.PUBLIC)
     public PoetryResult<List<Label>> listLabel() {
@@ -387,6 +410,7 @@ public class WebInfoController {
     /**
      * 查询List
      */
+    @Operation(summary = "查询List")
     @GetMapping("/listSortAndLabel")
     @RequirePermission(PermissionCode.PUBLIC)
     public PoetryResult<Map> listSortAndLabel() {

@@ -16,6 +16,8 @@ import com.ld.poetry.utils.PoetryUtil;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.util.CollectionUtils;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -34,6 +36,7 @@ import java.util.stream.Collectors;
  * @since 2021-12-02
  */
 @RestController
+@Tag(name = "ImChatUserMessage", description = "ImChatUserMessage 接口")
 @RequestMapping("/imChatUserMessage")
 public class ImChatUserMessageController {
 
@@ -46,6 +49,7 @@ public class ImChatUserMessageController {
     /**
      * 获取系统消息（只获取前十条）
      */
+    @Operation(summary = "分页列表-systemmessage")
     @GetMapping("/listSystemMessage")
     @RequirePermission(PermissionCode.LOGIN_REQUIRED)
     public PoetryResult<Page> listSystemMessage(@RequestParam(value = "current", defaultValue = "1") Long current,
@@ -86,6 +90,7 @@ public class ImChatUserMessageController {
     /**
      * 管理员添加系统消息
      */
+    @Operation(summary = "新增-systemmessage")
     @GetMapping("/saveSystemMessage")
     @RequirePermission(PermissionCode.SUPER_ADMIN)
     public PoetryResult saveSystemMessage(@RequestParam("content") String content) {
@@ -102,6 +107,7 @@ public class ImChatUserMessageController {
     /**
      * 删除系统消息
      */
+    @Operation(summary = "删除-systemmessage")
     @GetMapping("/deleteSystemMessage")
     @RequirePermission(PermissionCode.SUPER_ADMIN)
     public PoetryResult deleteSystemMessage(@RequestParam("id") Integer id) {
@@ -112,6 +118,7 @@ public class ImChatUserMessageController {
     /**
      * 获取朋友消息（只获取前四十条）
      */
+    @Operation(summary = "分页列表-friendmessage")
     @GetMapping("/listFriendMessage")
     @RequirePermission(PermissionCode.LOGIN_REQUIRED)
     public PoetryResult<Page> listFriendMessage(@RequestParam(value = "current", defaultValue = "1") Long current,

@@ -3,6 +3,8 @@ package com.ld.poetry.controller;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.validation.annotation.Validated;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.web.bind.annotation.*;
 
 import com.ld.poetry.annotation.RequirePermission;
@@ -28,6 +30,7 @@ import java.util.List;
  * @since 2021-08-12
  */
 @RestController
+@Tag(name = "User", description = "用户（注册/登录/信息）")
 @RequestMapping("/user")
 public class UserController {
 
@@ -41,6 +44,7 @@ public class UserController {
     /**
      * 用户名/密码注册
      */
+    @Operation(summary = "用户名/密码注册")
     @PostMapping("/regist")
     public PoetryResult<UserVO> regist(@Validated @RequestBody UserVO user) {
         return userService.regist(user);
@@ -50,6 +54,7 @@ public class UserController {
     /**
      * 用户名、邮箱、手机号/密码登录
      */
+    @Operation(summary = "用户名、邮箱、手机号/密码登录")
     @PostMapping("/login")
     public PoetryResult<UserVO> login(@RequestParam("account") String account,
                                       @RequestParam("password") String password,
@@ -61,6 +66,7 @@ public class UserController {
     /**
      * Token登录
      */
+    @Operation(summary = "Token登录")
     @PostMapping("/token")
     public PoetryResult<UserVO> login(@RequestParam("userToken") String userToken) {
         return userService.token(userToken);
@@ -70,6 +76,7 @@ public class UserController {
      * 根据Token获取用户信息 - 用户Profile自查
      * 自动解析token获得用户ID映射，获取本业务真实ID的用户信息
      */
+    @Operation(summary = "自动解析token获得用户ID映射，获取本业务真实ID的用户信息")
     @GetMapping("/info")
     @RequirePermission(PermissionCode.LOGIN_REQUIRED)
     public PoetryResult<UserVO> getUserInfo() {
@@ -116,6 +123,7 @@ public class UserController {
     /**
      * 退出
      */
+    @Operation(summary = "退出")
     @GetMapping("/logout")
     @RequirePermission(PermissionCode.LOGIN_REQUIRED)
     public PoetryResult exit() {
@@ -126,6 +134,7 @@ public class UserController {
     /**
      * 更新用户信息
      */
+    @Operation(summary = "更新用户信息")
     @PostMapping("/updateUserInfo")
     @RequirePermission(PermissionCode.LOGIN_REQUIRED)
     public PoetryResult<UserVO> updateUserInfo(@RequestBody UserVO user) {
@@ -139,6 +148,7 @@ public class UserController {
      * 1 手机号
      * 2 邮箱
      */
+    @Operation(summary = "2 邮箱")
     @GetMapping("/getCode")
     @RequirePermission(PermissionCode.LOGIN_REQUIRED)
     public PoetryResult getCode(@RequestParam("flag") Integer flag) {
@@ -151,6 +161,7 @@ public class UserController {
      * 1 手机号
      * 2 邮箱
      */
+    @Operation(summary = "2 邮箱")
     @GetMapping("/getCodeForBind")
     @RequirePermission(PermissionCode.LOGIN_REQUIRED)
     public PoetryResult getCodeForBind(@RequestParam("place") String place, @RequestParam("flag") Integer flag) {
@@ -164,6 +175,7 @@ public class UserController {
      * 2 邮箱
      * 3 密码：place=老密码&password=新密码
      */
+    @Operation(summary = "3 密码：place=老密码&password=新密码")
     @PostMapping("/updateSecretInfo")
     @RequirePermission(PermissionCode.LOGIN_REQUIRED)
     public PoetryResult<UserVO> updateSecretInfo(@RequestParam("place") String place, @RequestParam("flag") Integer flag, @RequestParam(value = "code", required = false) String code, @RequestParam("password") String password) {
@@ -177,6 +189,7 @@ public class UserController {
      * 1 手机号
      * 2 邮箱
      */
+    @Operation(summary = "2 邮箱")
     @GetMapping("/getCodeForForgetPassword")
     public PoetryResult getCodeForForgetPassword(@RequestParam("place") String place, @RequestParam("flag") Integer flag) {
         return userService.getCodeForForgetPassword(place, flag);
@@ -188,6 +201,7 @@ public class UserController {
      * 1 手机号
      * 2 邮箱
      */
+    @Operation(summary = "2 邮箱")
     @PostMapping("/updateForForgetPassword")
     public PoetryResult updateForForgetPassword(@RequestParam("place") String place, @RequestParam("flag") Integer flag, @RequestParam("code") String code, @RequestParam("password") String password) {
         return userService.updateForForgetPassword(place, flag, code, password);
@@ -196,6 +210,7 @@ public class UserController {
     /**
      * 根据用户名查找用户信息
      */
+    @Operation(summary = "根据用户名查找用户信息")
     @GetMapping("/getUserByUsername")
     @RequirePermission(PermissionCode.LOGIN_REQUIRED)
     public PoetryResult<List<UserVO>> getUserByUsername(@RequestParam("username") String username) {

@@ -10,16 +10,21 @@ import com.ld.poetry.utils.PoetryUtil;
 import com.ld.poetry.vo.ArticleVO;
 
 import org.springframework.validation.annotation.Validated;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
 
 @RestController
+@Tag(name = "UserArticleAuth", description = "文章访问授权")
+    @Operation(summary = "查询-order")
 @RequestMapping("/userArticleAuth")
 public class UserArticleAuthController {
 
     @Resource
     private UserArticleAuthService userArticleAuthService;
+    @Operation(summary = "查询-order")
     @PostMapping("/query")
     public Object queryOrder(
         @Validated @RequestBody PaymentNotifyDTO  paymentNotifyDTO 
@@ -36,6 +41,7 @@ public class UserArticleAuthController {
       /**
      * 通过 userId + articleId 查询
      */
+    @Operation(summary = "通过 userId + articleId 查询")
     @PostMapping("/create")
     public Object createUserArticleAuthOther(
         @Validated @RequestBody PaymentNotifyDTO  paymentNotifyDTO ) {
@@ -52,6 +58,7 @@ public class UserArticleAuthController {
     /**
      * 通过 userId + articleId 查询
      */
+    @Operation(summary = "通过 userId + articleId 查询")
     @GetMapping("/get")
     public UserArticleAuth getUserArticleAuth(@RequestParam Integer userId,
                                               @RequestParam Integer articleId) {
@@ -61,6 +68,7 @@ public class UserArticleAuthController {
     /**
      * 创建或更新 (同一个接口)
      */
+    @Operation(summary = "创建或更新 (同一个接口)")
     @PostMapping("/createOrUpdate")
     public UserArticleAuth createOrUpdate(@RequestBody UserArticleAuth userArticleAuth) {
         return userArticleAuthService.createOrUpdate(userArticleAuth);

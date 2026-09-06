@@ -15,6 +15,8 @@ import com.ld.poetry.vo.BaseRequestVO;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.validation.annotation.Validated;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.web.bind.annotation.*;
 
 
@@ -27,6 +29,7 @@ import org.springframework.web.bind.annotation.*;
  * @since 2022-12-31
  */
 @RestController
+@Tag(name = "Diary", description = "日记")
 @RequestMapping("/diary")
 public class DiaryController {
 
@@ -38,6 +41,7 @@ public class DiaryController {
      * 保存文章
      */
     @RequirePermission(PermissionCode.USER_ADMIN)
+    @Operation(summary = "保存文章")
     @PostMapping("/saveArticle")
     public PoetryResult saveArticle(@Validated @RequestBody ArticleVO articleVO) {
         PoetryCache.remove(CommonConst.USER_ARTICLE_LIST + PoetryUtil.getUserId().toString());
@@ -48,6 +52,7 @@ public class DiaryController {
     /**
      * 删除文章
      */
+    @Operation(summary = "删除文章")
     @GetMapping("/deleteArticle")
     @RequirePermission(PermissionCode.USER_ADMIN)
     public PoetryResult deleteArticle(@RequestParam("id") Integer id) {
@@ -59,6 +64,7 @@ public class DiaryController {
     /**
      * 更新文章
      */
+    @Operation(summary = "更新文章")
     @PostMapping("/updateArticle")
     @RequirePermission(PermissionCode.USER_ADMIN)
     public PoetryResult updateArticle(@Validated @RequestBody ArticleVO articleVO) {
@@ -69,6 +75,7 @@ public class DiaryController {
     /**
      * 查询文章List
      */
+    @Operation(summary = "查询文章List")
     @PostMapping("/listArticle")
     public PoetryResult<Page> listArticle(@RequestBody BaseRequestVO baseRequestVO) {
         return diaryService.listArticle(baseRequestVO);
@@ -79,6 +86,7 @@ public class DiaryController {
      * <p>
      * flag = true：查询可见的文章
      */
+    @Operation(summary = "flag = true：查询可见的文章")
     @GetMapping("/getArticleById")
     public PoetryResult<ArticleVO> getArticleById(@RequestParam("id") Integer id, @RequestParam("flag") Boolean flag, @RequestParam(value = "password", required = false) String password) {
         return diaryService.getArticleById(id, flag, password);

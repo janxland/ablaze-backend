@@ -17,6 +17,8 @@ import com.ld.poetry.vo.BaseRequestVO;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.util.StringUtils;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.web.bind.annotation.*;
 
 /**
@@ -28,6 +30,7 @@ import org.springframework.web.bind.annotation.*;
  * @since 2021-10-26
  */
 @RestController
+@Tag(name = "WeiYan", description = "微言")
 @RequestMapping("/weiYan")
 public class WeiYanController {
 
@@ -40,6 +43,7 @@ public class WeiYanController {
     /**
      * 保存
      */
+    @Operation(summary = "保存")
     @PostMapping("/saveWeiYan")
     @RequirePermission(PermissionCode.FILE_UPLOAD_TOKEN)
     public PoetryResult saveWeiYan(@RequestBody WeiYan weiYanVO) {
@@ -59,6 +63,7 @@ public class WeiYanController {
     /**
      * 保存
      */
+    @Operation(summary = "保存")
     @PostMapping("/saveNews")
     @RequirePermission(PermissionCode.LOGIN_REQUIRED)
     public PoetryResult saveNews(@RequestBody WeiYan weiYanVO) {
@@ -89,6 +94,7 @@ public class WeiYanController {
     /**
      * 查询List
      */
+    @Operation(summary = "查询List")
     @PostMapping("/listNews")
     @RequirePermission(PermissionCode.PUBLIC)
     public PoetryResult<BaseRequestVO> listNews(@RequestBody BaseRequestVO baseRequestVO) {
@@ -107,6 +113,7 @@ public class WeiYanController {
     /**
      * 删除
      */
+    @Operation(summary = "删除")
     @GetMapping("/deleteWeiYan")
     @RequirePermission(PermissionCode.FILE_UPLOAD_TOKEN)
     public PoetryResult deleteWeiYan(@RequestParam("id") Integer id) {
@@ -121,6 +128,7 @@ public class WeiYanController {
     /**
      * 查询List
      */
+    @Operation(summary = "查询List")
     @PostMapping("/listWeiYan")
     @RequirePermission(PermissionCode.PUBLIC)
     public PoetryResult<BaseRequestVO> listWeiYan(@RequestBody BaseRequestVO baseRequestVO) {

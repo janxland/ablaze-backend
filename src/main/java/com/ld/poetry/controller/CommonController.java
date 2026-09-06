@@ -8,9 +8,12 @@ import com.ld.poetry.service.CommentService;
 import com.ld.poetry.service.UserService;
 import org.jsoup.Jsoup;
 import org.springframework.beans.factory.annotation.Autowired;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
+@Tag(name = "Common", description = "通用接口")
 @RequestMapping("/common")
 public class CommonController {
 
@@ -32,6 +35,7 @@ public class CommonController {
     @Autowired
     private TioWebsocketStarter tioWebsocketStarter;
 
+    @Operation(summary = "分页列表-bosstreehole")
     @GetMapping("/gethtml")
     public Object listBossTreeHole(@RequestParam("url") String url) {
         try {

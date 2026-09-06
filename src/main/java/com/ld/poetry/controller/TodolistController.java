@@ -5,6 +5,8 @@ import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.validation.annotation.Validated;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -32,6 +34,7 @@ import com.ld.poetry.vo.BaseRequestVO;
  * @since 2023-07-09
  */
 @RestController
+@Tag(name = "Todolist", description = "待办清单")
 @RequestMapping("/todolist")
 public class TodolistController {
 
@@ -42,6 +45,7 @@ public class TodolistController {
      * 保存任务
      */
     @RequirePermission(PermissionCode.USER_ADMIN)
+    @Operation(summary = "保存任务")
     @PostMapping("/saveTask")
     public PoetryResult saveTask(@Validated @RequestBody Todolist todolistVO) {
         return todolistService.saveTask(todolistVO);
@@ -51,6 +55,7 @@ public class TodolistController {
     /**
      * 删除任务
      */
+    @Operation(summary = "删除任务")
     @GetMapping("/deleteTask")
     @RequirePermission(PermissionCode.USER_ADMIN)
     public PoetryResult deleteTask(@RequestParam("id") Integer id) {
@@ -62,6 +67,7 @@ public class TodolistController {
     /**
      * 更新任务
      */
+    @Operation(summary = "更新任务")
     @PostMapping("/updateTask")
     @RequirePermission(PermissionCode.USER_ADMIN)
     public PoetryResult updateTask(@Validated @RequestBody Todolist todolistVO) {
@@ -72,6 +78,7 @@ public class TodolistController {
     /**
      * 查询任务List
      */
+    @Operation(summary = "查询任务List")
     @PostMapping("/listTask")
     @RequirePermission(PermissionCode.PUBLIC)
     public PoetryResult<List<Todolist>> listTask(@RequestBody Todolist todolistVO) {
@@ -83,6 +90,7 @@ public class TodolistController {
      * <p>
      * flag = true：查询可见的任务
      */
+    @Operation(summary = "flag = true：查询可见的任务")
     @GetMapping("/getTaskById")
     @RequirePermission(PermissionCode.PUBLIC)
     public PoetryResult<Todolist> getTaskById(@RequestParam("id") Integer id, @RequestParam("flag") Boolean flag, @RequestParam(value = "password", required = false) String password) {

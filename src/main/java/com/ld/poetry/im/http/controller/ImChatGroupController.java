@@ -25,6 +25,8 @@ import com.ld.poetry.vo.BaseRequestVO;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.web.bind.annotation.*;
 import org.tio.core.Tio;
 
@@ -43,6 +45,7 @@ import java.util.stream.Collectors;
  * @since 2021-12-02
  */
 @RestController
+@Tag(name = "ImChatGroup", description = "ImChatGroup 接口")
 @RequestMapping("/imChatGroup")
 public class ImChatGroupController {
 
@@ -61,6 +64,7 @@ public class ImChatGroupController {
     /**
      * 创建群组
      */
+    @Operation(summary = "新增-group")
     @PostMapping("/creatGroupCommon")
     @RequirePermission(PermissionCode.LOGIN_REQUIRED)
     public PoetryResult creatGroup(@RequestBody ImChatGroup imChatGroup) {
@@ -87,6 +91,7 @@ public class ImChatGroupController {
     /**
      * 创建话题
      */
+    @Operation(summary = "新增-grouptopic")
     @PostMapping("/creatGroupTopic")
     @RequirePermission(PermissionCode.SUPER_ADMIN)
     public PoetryResult creatGroupTopic(@RequestBody ImChatGroup imChatGroup) {
@@ -108,6 +113,7 @@ public class ImChatGroupController {
      * <p>
      * 只有群主才能修改组
      */
+    @Operation(summary = "更新-group")
     @PostMapping("/updateGroup")
     @RequirePermission(PermissionCode.LOGIN_REQUIRED)
     public PoetryResult updateGroup(@RequestBody ImChatGroup imChatGroup) {
@@ -145,6 +151,7 @@ public class ImChatGroupController {
     /**
      * 解散群
      */
+    @Operation(summary = "删除-group")
     @GetMapping("/deleteGroup")
     @RequirePermission(PermissionCode.LOGIN_REQUIRED)
     public PoetryResult deleteGroup(@RequestParam("id") Integer id) {
@@ -173,6 +180,7 @@ public class ImChatGroupController {
     /**
      * 管理员查询所有群
      */
+    @Operation(summary = "分页列表-groupforadmin")
     @PostMapping("/listGroupForAdmin")
     @RequirePermission(PermissionCode.SUPER_ADMIN)
     public PoetryResult<BaseRequestVO> listGroupForAdmin(@RequestBody BaseRequestVO baseRequestVO) {
@@ -184,6 +192,7 @@ public class ImChatGroupController {
     /**
      * 加入话题
      */
+    @Operation(summary = "新增-grouptopic")
     @GetMapping("/addGroupTopic")
     @RequirePermission(PermissionCode.LOGIN_REQUIRED)
     public PoetryResult addGroupTopic(@RequestParam("id") Integer id) {
@@ -201,6 +210,7 @@ public class ImChatGroupController {
      * <p>
      * 只查询审核通过和禁言的群
      */
+    @Operation(summary = "分页列表-group")
     @GetMapping("/listGroup")
     @RequirePermission(PermissionCode.LOGIN_REQUIRED)
     public PoetryResult<List<GroupVO>> listGroup() {

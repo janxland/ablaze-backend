@@ -20,12 +20,15 @@ import com.ld.poetry.vo.BaseRequestVO;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.util.CollectionUtils;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.web.bind.annotation.*;
 import org.tio.core.Tio;
 
 import java.util.List;
 
 @RestController
+@Tag(name = "Admin", description = "管理后台")
 @RequestMapping("/admin")
 public class AdminController {
 
@@ -51,6 +54,7 @@ public class AdminController {
     /**
      * 查询用户
      */
+    @Operation(summary = "查询用户")
     @PostMapping("/user/list")
     @RequirePermission(PermissionCode.SUPER_ADMIN)
     public PoetryResult<Page> listUser(@RequestBody BaseRequestVO baseRequestVO) {
@@ -63,6 +67,7 @@ public class AdminController {
      * flag = true：解禁
      * flag = false：封禁
      */
+    @Operation(summary = "flag = false：封禁")
     @GetMapping("/user/changeUserStatus")
     @RequirePermission(PermissionCode.SUPER_ADMIN)
     public PoetryResult changeUserStatus(@RequestParam("userId") Integer userId, @RequestParam("flag") Boolean flag) {
@@ -79,6 +84,7 @@ public class AdminController {
     /**
      * 修改用户类型
      */
+    @Operation(summary = "修改用户类型")
     @GetMapping("/user/changeUserType")
     @RequirePermission(PermissionCode.SUPER_ADMIN)
     public PoetryResult changeUserType(@RequestParam("userId") Integer userId, @RequestParam("userType") Integer userType) {
@@ -109,6 +115,7 @@ public class AdminController {
     /**
      * 获取网站信息
      */
+    @Operation(summary = "获取网站信息")
     @GetMapping("/webInfo/getAdminWebInfo")
     @RequirePermission(PermissionCode.SUPER_ADMIN)
     public PoetryResult<WebInfo> getWebInfo() {
@@ -125,6 +132,7 @@ public class AdminController {
     /**
      * 用户查询文章
      */
+    @Operation(summary = "用户查询文章")
     @PostMapping("/article/user/list")
     @RequirePermission(PermissionCode.USER_ADMIN)
     public PoetryResult<Page> listUserArticle(@RequestBody BaseRequestVO baseRequestVO) {
@@ -135,6 +143,7 @@ public class AdminController {
     /**
      * Boss查询文章
      */
+    @Operation(summary = "Boss查询文章")
     @PostMapping("/article/boss/list")
     @RequirePermission(PermissionCode.SUPER_ADMIN)
     public PoetryResult<Page> listBossArticle(@RequestBody BaseRequestVO baseRequestVO) {
@@ -144,6 +153,7 @@ public class AdminController {
     /**
      * 修改文章状态
      */
+    @Operation(summary = "修改文章状态")
     @GetMapping("/article/changeArticleStatus")
     @RequirePermission(PermissionCode.USER_ADMIN)
     public PoetryResult changeArticleStatus(@RequestParam("articleId") Integer articleId,
@@ -169,6 +179,7 @@ public class AdminController {
     /**
      * 查询文章
      */
+    @Operation(summary = "查询文章")
     @GetMapping("/article/getArticleById")
     @RequirePermission(PermissionCode.USER_ADMIN)
     public PoetryResult<ArticleVO> getArticleByIdForUser(@RequestParam("id") Integer id) {
@@ -177,6 +188,7 @@ public class AdminController {
    /**
      * 查询日记
      */
+    @Operation(summary = "查询日记")
     @GetMapping("/diary/getArticleById")
     @RequirePermission(PermissionCode.USER_ADMIN)
     public PoetryResult<ArticleVO> getDiaryByIdForUser(@RequestParam("id") Integer id) {
@@ -185,6 +197,7 @@ public class AdminController {
     /**
      * 作者删除评论
      */
+    @Operation(summary = "作者删除评论")
     @GetMapping("/comment/user/deleteComment")
     @RequirePermission(PermissionCode.USER_ADMIN)
     public PoetryResult userDeleteComment(@RequestParam("id") Integer id) {
@@ -206,6 +219,7 @@ public class AdminController {
     /**
      * Boss删除评论
      */
+    @Operation(summary = "Boss删除评论")
     @GetMapping("/comment/boss/deleteComment")
     @RequirePermission(PermissionCode.SUPER_ADMIN)
     public PoetryResult bossDeleteComment(@RequestParam("id") Integer id) {
@@ -216,6 +230,7 @@ public class AdminController {
     /**
      * 用户查询评论
      */
+    @Operation(summary = "用户查询评论")
     @PostMapping("/comment/user/list")
     @RequirePermission(PermissionCode.USER_ADMIN)
     public PoetryResult<Page> listUserComment(@RequestBody BaseRequestVO baseRequestVO) {
@@ -225,6 +240,7 @@ public class AdminController {
     /**
      * Boss查询评论
      */
+    @Operation(summary = "Boss查询评论")
     @PostMapping("/comment/boss/list")
     @RequirePermission(PermissionCode.SUPER_ADMIN)
     public PoetryResult<Page> listBossComment(@RequestBody BaseRequestVO baseRequestVO) {
@@ -234,6 +250,7 @@ public class AdminController {
     /**
      * Boss查询树洞
      */
+    @Operation(summary = "Boss查询树洞")
     @PostMapping("/treeHole/boss/list")
     @RequirePermission(PermissionCode.SUPER_ADMIN)
     public PoetryResult<Page> listBossTreeHole(@RequestBody BaseRequestVO baseRequestVO) {

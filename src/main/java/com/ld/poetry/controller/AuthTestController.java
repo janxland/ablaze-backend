@@ -8,6 +8,8 @@ import com.ld.poetry.auth.SimpleAuthHelper;
 import com.ld.poetry.service.UserCacheService;
 import com.ld.poetry.utils.JwtUtil;
 import org.springframework.beans.factory.annotation.Autowired;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.HashMap;
@@ -17,6 +19,7 @@ import java.util.Map;
  * 认证测试控制器 - 展示新的权限系统
  */
 @RestController
+@Tag(name = "AuthTest", description = "鉴权自检")
 @RequestMapping("/api/auth-test")
 public class AuthTestController {
 
@@ -32,6 +35,7 @@ public class AuthTestController {
     /**
      * 获取当前用户信息
      */
+    @Operation(summary = "获取当前用户信息")
     @GetMapping("/me")
     @RequirePermission(PermissionCode.LOGIN_REQUIRED)
     public Map<String, Object> getCurrentUser() {
@@ -57,6 +61,7 @@ public class AuthTestController {
     /**
      * 调试接口 - 无权限检查
      */
+    @Operation(summary = "调试接口 - 无权限检查")
     @GetMapping("/debug")
     public Map<String, Object> debugAuth() {
         AuthContext.UserInfo user = AuthContext.getCurrentUser();
@@ -78,6 +83,7 @@ public class AuthTestController {
     /**
      * 测试认证中心token兼容性和用户映射
      */
+    @Operation(summary = "测试认证中心token兼容性和用户映射")
     @PostMapping("/test-auth-center-token")
     public Map<String, Object> testAuthCenterToken(@RequestBody Map<String, String> request) {
         String token = request.get("token");
@@ -129,6 +135,7 @@ public class AuthTestController {
     /**
      * Cookie Token测试接口 - 测试从Cookie中提取sso_access_token
      */
+    @Operation(summary = "Cookie Token测试接口 - 测试从Cookie中提取sso_access_token")
     @GetMapping("/cookie-test")
     public Map<String, Object> cookieTokenTest() {
         Map<String, Object> result = new HashMap<>();
@@ -172,6 +179,7 @@ public class AuthTestController {
     /**
      * 公开接口
      */
+    @Operation(summary = "公开接口")
     @GetMapping("/public")
     @RequirePermission(PermissionCode.PUBLIC)
     public Map<String, Object> publicEndpoint() {
@@ -184,6 +192,7 @@ public class AuthTestController {
     /**
      * 管理员接口
      */
+    @Operation(summary = "管理员接口")
     @GetMapping("/admin")
     @RequirePermission(PermissionCode.USER_ADMIN)
     public Map<String, Object> adminEndpoint() {
@@ -197,6 +206,7 @@ public class AuthTestController {
     /**
      * 超级管理员接口
      */
+    @Operation(summary = "超级管理员接口")
     @GetMapping("/super-admin")
     @RequirePermission(PermissionCode.SUPER_ADMIN)
     public Map<String, Object> superAdminEndpoint() {

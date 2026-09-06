@@ -3,6 +3,8 @@ package com.ld.poetry.controller;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.validation.annotation.Validated;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.web.bind.annotation.*;
 
 import com.ld.poetry.annotation.RequirePermission;
@@ -26,6 +28,7 @@ import com.ld.poetry.vo.CommentVO;
  * @since 2021-08-13
  */
 @RestController
+@Tag(name = "Comment", description = "评论管理")
 @RequestMapping("/comment")
 public class CommentController {
 
@@ -40,6 +43,7 @@ public class CommentController {
     /**
      * 保存评论
      */
+    @Operation(summary = "保存评论")
     @PostMapping("/saveComment")
     @RequirePermission(PermissionCode.FILE_UPLOAD_TOKEN)
     public PoetryResult saveComment(@Validated @RequestBody CommentVO commentVO) {
@@ -51,6 +55,7 @@ public class CommentController {
     /**
      * 删除评论
      */
+    @Operation(summary = "删除评论")
     @GetMapping("/deleteComment")
     @RequirePermission(PermissionCode.FILE_UPLOAD_TOKEN)
     public PoetryResult deleteComment(@RequestParam("id") Integer id) {
@@ -61,6 +66,7 @@ public class CommentController {
     /**
      * 查询评论数量
      */
+    @Operation(summary = "查询评论数量")
     @GetMapping("/getCommentCount")
     @RequirePermission(PermissionCode.PUBLIC)
     public PoetryResult<Integer> getCommentCount(@RequestParam("source") Integer source) {
@@ -71,6 +77,7 @@ public class CommentController {
     /**
      * 查询评论
      */
+    @Operation(summary = "查询评论")
     @PostMapping("/listComment")
     @RequirePermission(PermissionCode.PUBLIC)
     public PoetryResult<BaseRequestVO> listComment(@RequestBody BaseRequestVO baseRequestVO) {

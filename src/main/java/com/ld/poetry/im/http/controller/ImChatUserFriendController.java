@@ -15,6 +15,8 @@ import com.ld.poetry.utils.PoetryUtil;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.util.StringUtils;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -32,6 +34,7 @@ import java.util.List;
  * @since 2021-12-02
  */
 @RestController
+@Tag(name = "ImChatUserFriend", description = "ImChatUserFriend 接口")
 @RequestMapping("/imChatUserFriend")
 public class ImChatUserFriendController {
 
@@ -44,6 +47,7 @@ public class ImChatUserFriendController {
     /**
      * 添加好友申请
      */
+    @Operation(summary = "新增-friend")
     @GetMapping("/addFriend")
     @RequirePermission(PermissionCode.LOGIN_REQUIRED)
     public PoetryResult addFriend(@RequestParam("friendId") Integer friendId, @RequestParam(value = "remark", required = false) String remark) {
@@ -74,6 +78,7 @@ public class ImChatUserFriendController {
     /**
      * 查询好友
      */
+    @Operation(summary = "查询-friend")
     @GetMapping("/getFriend")
     @RequirePermission(PermissionCode.LOGIN_REQUIRED)
     public PoetryResult<List<UserFriendVO>> getFriend(@RequestParam(value = "friendStatus", required = false) Integer friendStatus) {
@@ -110,6 +115,7 @@ public class ImChatUserFriendController {
      * <p>
      * 朋友状态[-1:审核不通过或者删除好友，0:未审核，1:审核通过]
      */
+    @Operation(summary = "changeFriend")
     @GetMapping("/changeFriend")
     @RequirePermission(PermissionCode.LOGIN_REQUIRED)
     public PoetryResult changeFriend(@RequestParam("friendId") Integer friendId,
