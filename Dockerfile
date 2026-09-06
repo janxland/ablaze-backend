@@ -17,7 +17,7 @@ COPY --from=build /build/target/ablaze-0.0.1-SNAPSHOT.jar /app/app.jar
 RUN mkdir -p /app/logs && chown -R ablaze:ablaze /app
 
 USER ablaze
-ENV JAVA_TOOL_OPTIONS="-Xms128m -Xmx512m -XX:+UseG1GC -Djava.security.egd=file:/dev/./urandom"
+ENV JAVA_TOOL_OPTIONS="-Xms128m -Xmx384m -XX:MaxMetaspaceSize=160m -XX:MaxDirectMemorySize=32m -XX:+UseG1GC -Djava.security.egd=file:/dev/./urandom"
 EXPOSE 8181 9999
 
 ENTRYPOINT ["java", "-jar", "/app/app.jar", "--spring.profiles.active=docker"]
