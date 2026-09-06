@@ -245,6 +245,10 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         if (userId == null) {
             return PoetryResult.fail("用户未登录");
         }
+        // 发送频率限制：60 秒冷却，防止邮件轰炸
+        if (PoetryCache.get(CommonConst.USER_CODE + "limit_" + userId + "_" + flag) != null) {
+            return PoetryResult.fail("发送太频繁，请稍后再试！");
+        }
         User user = lambdaQuery().eq(User::getId, userId).one();
         int i = new Random().nextInt(900000) + 100000;
         if (flag == 1) {
@@ -267,11 +271,16 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
             mailUtil.sendMailMessage(mail, "您有一封来自" + (webInfo == null ? "寻国记" : webInfo.getWebName()) + "的回执！", text);
         }
         PoetryCache.put(CommonConst.USER_CODE + PoetryUtil.getUserId() + "_" + flag, Integer.valueOf(i), 300);
+        PoetryCache.put(CommonConst.USER_CODE + "limit_" + PoetryUtil.getUserId() + "_" + flag, Boolean.TRUE, 60);
         return PoetryResult.success();
     }
 
     @Override
     public PoetryResult getCodeForBind(String place, Integer flag) {
+        // 发送频率限制：60 秒冷却（place 可为任意地址，必须限流防邮件轰炸）
+        if (PoetryCache.get(CommonConst.USER_CODE + "limit_" + PoetryUtil.getUserId() + "_bind_" + place + "_" + flag) != null) {
+            return PoetryResult.fail("发送太频繁，请稍后再试！");
+        }
         int i = new Random().nextInt(900000) + 100000;
         if (flag == 1) {
             log.info(place + "---" + "手机验证码---" + i);
@@ -284,6 +293,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
             mailUtil.sendMailMessage(mail, "您有一封来自" + (webInfo == null ? "寻国记" : webInfo.getWebName()) + "的回执！", text);
         }
         PoetryCache.put(CommonConst.USER_CODE + PoetryUtil.getUserId() + "_" + place + "_" + flag, Integer.valueOf(i), 300);
+        PoetryCache.put(CommonConst.USER_CODE + "limit_" + PoetryUtil.getUserId() + "_bind_" + place + "_" + flag, Boolean.TRUE, 60);
         return PoetryResult.success();
     }
 
