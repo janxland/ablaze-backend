@@ -42,6 +42,13 @@
             <artifactId>spring-boot-starter-cache</artifactId>
         </dependency>
 
+        <!-- OpenAPI 3 文档出口（springdoc 1.2.x 对应 Boot 2.2.x，/v3/api-docs） -->
+        <dependency>
+            <groupId>org.springdoc</groupId>
+            <artifactId>springdoc-openapi-ui</artifactId>
+            <version>1.2.33</version>
+        </dependency>
+
         <!-- 消息队列 -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
