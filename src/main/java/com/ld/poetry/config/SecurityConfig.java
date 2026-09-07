@@ -4,10 +4,10 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
-import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.firewall.HttpFirewall;
 import org.springframework.security.web.firewall.StrictHttpFirewall;
 import org.springframework.web.cors.CorsConfiguration;
@@ -17,33 +17,35 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 import java.util.Arrays;
 
 /**
- * 简化的Spring Security配置
+ * 简化的Spring Security配置（Security 5.7+ SecurityFilterChain 写法）
  * 只配置CORS，认证由权限守卫直接处理
  */
 @Configuration
 @EnableWebSecurity
-public class SecurityConfig extends WebSecurityConfigurerAdapter {
+public class SecurityConfig {
 
-    @Override
-    protected void configure(HttpSecurity http) throws Exception {
+    @Bean
+    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
             // 禁用CSRF，因为使用JWT
             .csrf().disable()
-            
+
             // 配置CORS
             .cors().configurationSource(corsConfigurationSource())
-            
+
             .and()
-            
+
             // 配置会话管理为无状态
             .sessionManagement()
             .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
-            
+
             .and()
-            
+
             // 允许所有请求通过，权限由@RequirePermission注解控制
             .authorizeRequests()
             .anyRequest().permitAll();
+
+        return http.build();
     }
 
     /**

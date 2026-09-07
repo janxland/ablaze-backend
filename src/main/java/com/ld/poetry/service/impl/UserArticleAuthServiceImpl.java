@@ -32,10 +32,11 @@ public class UserArticleAuthServiceImpl
         extends ServiceImpl<UserArticleAuthMapper, UserArticleAuth>
         implements UserArticleAuthService {
 
-    @Value("${PAY_API_URL}")
+    // Boot 2.7：属性改从环境变量 PAY_API_URL 直接解析（带空默认，防未配置时启动失败）
+    @Value("${PAY_API_URL:}")
     private String PAY_API_URL;
 
-    @Value("${PAY_STATUS_API_URL}")
+    @Value("${PAY_STATUS_API_URL:}")
     private String PAY_STATUS_API_URL;
     @Override
     public String createOrder(PaymentNotifyDTO paymentNotifyDTO) {
