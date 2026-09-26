@@ -2,6 +2,8 @@ package com.ld.poetry.auth;
 
 import com.ld.poetry.annotation.RequirePermission;
 import com.ld.poetry.enums.PermissionCode;
+import com.ld.poetry.handle.PoetryLoginException;
+import com.ld.poetry.handle.PoetryRuntimeException;
 import lombok.extern.slf4j.Slf4j;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
@@ -55,9 +57,15 @@ public class PermissionGuard {
         
         // 检查权限
         if (!hasPermission(requiredPermission, currentUser)) {
+            // 未登录 / 登录过期：返回 300，让前端跳转登录，而不是落进 500 兜底
+            if (currentUser == null) {
+                log.warn("权限检查失败 - 未登录或登录已过期, 需要权限: {}", requiredPermission);
+                throw new PoetryLoginException("未登陆或登录已过期，请重新登陆！");
+            }
             String message = getPermissionErrorMessage(requiredPermission);
-            log.warn("权限检查失败: {}, 当前用户: {}", message, currentUser != null ? currentUser.getUserId() : "null");
-            throw new RuntimeException(message);
+            log.warn("权限检查失败: {}, 当前用户: {}", message, currentUser.getUserId());
+            // 已登录但权限不足：透出真实原因，避免被兜底成「服务异常！」
+            throw new PoetryRuntimeException(message);
         }
         
         log.info("权限检查通过");
